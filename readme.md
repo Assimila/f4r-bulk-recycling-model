@@ -5,7 +5,10 @@ It is part of the European Space Agency (ESA) project Forests For Resilience.
 
 ## Introduction
 
-Here we implement the numerical model defined in the appendix of [[2]](#ref-2).
+Here we implement the numerical model defined in the appendix of [[2]](#ref-2). 
+This is an equation of state for the conservation of atmospheric water vapor,
+with decomposition into advective (non-local) and evaporative (local) components via an auxiliary variable $\rho$.
+The model is solved numerically using a finite-difference method on a staggered grid.
 
 ## Concepts
 
@@ -18,7 +21,7 @@ Recycling ratio $r$: the fraction of local-origin precipitation to the total pre
 Water vapor content / depth $w$: quantity of precipitable water in the atmosphere above a point on the surface.
 This is the integral of the specific humidity $q$ over the vertical coordinate $z$.
 
-Specific humidity $q$: ration of mass of water vapor per unit mass of air.
+Specific humidity $q$: ratio of mass of water vapor per unit mass of air.
 
 Total water vapor content is decomposed into advective (non-local) $w_a$ and evaporative $w_m$ (local) components:
 
@@ -30,9 +33,13 @@ Precipitation is also decomposed into advective (non-local) $P_a$ and evaporativ
 
 $$P = P_a + P_m$$
 
-Velocity $V = (u, v)$: movement of the air in the atmosphere.
+The basic assumption of bulk models is the condition of a well-mixed atmosphere:
 
-Water vapor flux $F = (F^{(x)}, F^{(y)})$: movement of water vapor in the atmosphere.
+$$\frac{P_m}{P} = \frac{w_m}{w}$$
+
+Velocity $\vec{V} = (u, v)$: movement of the air in the atmosphere.
+
+Water vapor flux $\vec{F} = (F^{(x)}, F^{(y)}) = (uw, vw)$: movement of water vapor in the atmosphere.
 
 ### Auxiliary variable
 
@@ -40,14 +47,43 @@ Local recycling ratio $\rho$: scalar field defined by equation (2.8) of [[1]](#r
 
 $$\rho(x, y) = \frac{P_m(x, y)}{P(x, y)}$$
 
-Note that $P_m(x, y)$ is the contribution of evaporation from the
-total area of the domain to precipitation at this specific
-point.
-
-Not the contribution of evaporation from the point (x, y) to
-precipitation at the same point.
+Note that $P_m(x, y)$ is the contribution of evaporation
+from the **total area of the domain**
+to precipitation at this point.
+**Not** the contribution of evaporation from the point (x, y)
+to precipitation at the same point.
 
 Thus, the quantity $\rho$ represents the regional contribution to local precipitation.
+
+### Conservation equations
+
+The model is essentially a conservation of atmospheric water vapor, with the following terms:
+
+- advection
+- evaporation
+- precipitation
+- change in stored atmospheric water vapor
+  - neglected at sufficiently long time scales
+
+$$
+\begin{align*}
+\nabla \cdot \vec{F} &= E - P \\
+\frac{\partial F^{(x)}}{\partial x} + \frac{\partial F^{(y)}}{\partial y} &= E - P \\
+\frac{\partial(wu)}{\partial x} + \frac{\partial(wv)}{\partial y} &= E - P
+\end{align*}
+$$
+
+and writing the same conservation law for water vapor of local origin:
+
+$$
+\begin{align*}
+\nabla \cdot \vec{F_m} &= E - P_m \\
+\frac{\partial F^{(x)}_m}{\partial x} + \frac{\partial F^{(y)}_m}{\partial y} &= E - P_m \\
+\frac{\partial(w_m u)}{\partial x} + \frac{\partial(w_m v)}{\partial y} &= E- P_m \\
+\frac{\partial(\rho wu)}{\partial x} + \frac{\partial(\rho wv)}{\partial y} &= E - \rho P \\
+\frac{\partial(\rho F^{(x)})}{\partial x} + \frac{\partial(\rho F^{(y)})}{\partial y} &= E - \rho P \\
+\end{align*}
+$$
 
 ## References
 
