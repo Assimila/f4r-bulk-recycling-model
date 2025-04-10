@@ -106,8 +106,8 @@ defined by the conditions
 
 ```math
 \begin{gather*}
-F^{(x)}_{i, j+1/2} > 0 \\
-F^{(y)}_{i+1/2, j} > 0
+F^{(x)}_{i, j+1/2} \gt 0 \\
+F^{(y)}_{i+1/2, j} \gt 0
 \end{gather*}
 ```
 
@@ -152,6 +152,61 @@ A_1 = 2 E_{i+1/2, j+1/2} \Delta x \Delta y
 - \rho^{k}_{i+1/2, j+3/2} F_{i+1/2, j+1}^{(y)} \Delta x \\
 + ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i-1/2, j+1/2} ) F_{i, j+1/2}^{(x)} \Delta y \\
 + ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i+1/2, j-1/2} ) F_{i+1/2, j}^{(y)} \Delta x
+\end{gather*}
+```
+
+### Case 2 - wind from the north-west
+
+defined by the conditions
+
+```math
+\begin{gather*}
+F^{(x)}_{i, j+1/2} \gt 0 \\
+F^{(y)}_{i+1/2, j} \lt 0
+\end{gather*}
+```
+
+following from (A.2)
+
+```math
+\begin{gather*}
+\frac{1}{2} ( \rho^{k+1}_{i+1/2, j+1/2} + \rho^{k}_{i+3/2, j+1/2} ) F_{i+1, j+1/2}^{(x)} \Delta y
+- \frac{1}{2} ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i-1/2, j+1/2} ) F_{i, j+1/2}^{(x)} \Delta y \\
++ \frac{1}{2} ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k}_{i+1/2, j+3/2} ) F_{i+1/2, j+1}^{(y)} \Delta x
+- \frac{1}{2} ( \rho^{k+1}_{i+1/2, j+1/2} + \rho^{k+1}_{i+1/2, j-1/2} ) F_{i+1/2, j}^{(y)} \Delta x \\
+= E_{i+1/2, j+1/2} \Delta x \Delta y 
+- \rho^{k+1}_{i+1/2, j+1/2} P_{i+1/2, j+1/2} \Delta x \Delta y
+\end{gather*}
+```
+
+```math
+\begin{gather*}
+\rho^{k+1}_{i+1/2, j+1/2} (
+    2 P_{i+1/2, j+1/2} \Delta x \Delta y
+    + F_{i+1, j+1/2}^{(x)} \Delta y
+    - F_{i+1/2, j}^{(y)} \Delta x
+) \\
+= 2 E_{i+1/2, j+1/2} \Delta x \Delta y
+- \rho^{k}_{i+3/2, j+1/2} F_{i+1, j+1/2}^{(x)} \Delta y
++ \rho^{k+1}_{i+1/2, j-1/2} F_{i+1/2, j}^{(y)} \Delta x \\
++ ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i-1/2, j+1/2} ) F_{i, j+1/2}^{(x)} \Delta y \\
+- ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k}_{i+1/2, j+3/2} ) F_{i+1/2, j+1}^{(y)} \Delta x
+\end{gather*}
+```
+
+```math
+A_0 = 2 P_{i+1/2, j+1/2} \Delta x \Delta y
++ F_{i+1, j+1/2}^{(x)} \Delta y
+- F_{i+1/2, j}^{(y)} \Delta x
+```
+
+```math
+\begin{gather*}
+A_1 = 2 E_{i+1/2, j+1/2} \Delta x \Delta y
+- \rho^{k}_{i+3/2, j+1/2} F_{i+1, j+1/2}^{(x)} \Delta y
++ \rho^{k+1}_{i+1/2, j-1/2} F_{i+1/2, j}^{(y)} \Delta x \\
++ ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i-1/2, j+1/2} ) F_{i, j+1/2}^{(x)} \Delta y \\
+- ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k}_{i+1/2, j+3/2} ) F_{i+1/2, j+1}^{(y)} \Delta x
 \end{gather*}
 ```
 
