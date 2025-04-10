@@ -132,10 +132,10 @@ following from (A.2)
     + F_{i+1/2, j+1}^{(y)} \Delta x
 ) \\
 = 2 E_{i+1/2, j+1/2} \Delta x \Delta y
-+ \rho^{k}_{i+3/2, j+1/2} F_{i+1, j+1/2}^{(x)} \Delta y
-+ \rho^{k}_{i+1/2, j+3/2} F_{i+1/2, j+1}^{(y)} \Delta x \\
-- ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i-1/2, j+1/2} ) F_{i, j+1/2}^{(x)} \Delta y \\
-- ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i+1/2, j-1/2} ) F_{i+1/2, j}^{(y)} \Delta x
+- \rho^{k}_{i+3/2, j+1/2} F_{i+1, j+1/2}^{(x)} \Delta y
+- \rho^{k}_{i+1/2, j+3/2} F_{i+1/2, j+1}^{(y)} \Delta x \\
++ ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i-1/2, j+1/2} ) F_{i, j+1/2}^{(x)} \Delta y \\
++ ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i+1/2, j-1/2} ) F_{i+1/2, j}^{(y)} \Delta x
 \end{gather*}
 ```
 
@@ -148,10 +148,10 @@ A_0 = 2 P_{i+1/2, j+1/2} \Delta x \Delta y
 ```math
 \begin{gather*}
 A_1 = 2 E_{i+1/2, j+1/2} \Delta x \Delta y
-+ \rho^{k}_{i+3/2, j+1/2} F_{i+1, j+1/2}^{(x)} \Delta y
-+ \rho^{k}_{i+1/2, j+3/2} F_{i+1/2, j+1}^{(y)} \Delta x \\
-- ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i-1/2, j+1/2} ) F_{i, j+1/2}^{(x)} \Delta y \\
-- ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i+1/2, j-1/2} ) F_{i+1/2, j}^{(y)} \Delta x
+- \rho^{k}_{i+3/2, j+1/2} F_{i+1, j+1/2}^{(x)} \Delta y
+- \rho^{k}_{i+1/2, j+3/2} F_{i+1/2, j+1}^{(y)} \Delta x \\
++ ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i-1/2, j+1/2} ) F_{i, j+1/2}^{(x)} \Delta y \\
++ ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i+1/2, j-1/2} ) F_{i+1/2, j}^{(y)} \Delta x
 \end{gather*}
 ```
 
