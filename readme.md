@@ -25,17 +25,23 @@ Specific humidity $q$: ratio of mass of water vapor per unit mass of air.
 
 Total water vapor content is decomposed into advective (non-local) $w_a$ and evaporative $w_m$ (local) components:
 
-$$w = w_a + w_m$$
+$$
+w = w_a + w_m
+$$
 
 Precipitation $P$: the amount of water that falls from the atmosphere to the surface in a given time interval.
 
 Precipitation is also decomposed into advective (non-local) $P_a$ and evaporative $P_m$ (local) components:
 
-$$P = P_a + P_m$$
+$$
+P = P_a + P_m
+$$
 
 The basic assumption of bulk models is the condition of a well-mixed atmosphere:
 
-$$\frac{P_m}{P} = \frac{w_m}{w}$$
+$$
+\frac{P_m}{P} = \frac{w_m}{w}
+$$
 
 Velocity $\vec{V} = (u, v)$: movement of the air in the atmosphere.
 
@@ -45,7 +51,9 @@ Water vapor flux $\vec{F} = (F^{(x)}, F^{(y)}) = (uw, vw)$: movement of water va
 
 Local recycling ratio $\rho$: scalar field defined by equation (2.8) of [[1]](#ref-1).
 
-$$\rho(x, y) = \frac{P_m(x, y)}{P(x, y)}$$
+$$
+\rho(x, y) = \frac{P_m(x, y)}{P(x, y)}
+$$
 
 Note that $P_m(x, y)$ is the contribution of evaporation
 from the **total area of the domain**
@@ -59,21 +67,21 @@ Thus, the quantity $\rho$ represents the regional contribution to local precipit
 
 The model is essentially a conservation of atmospheric water vapor
 
-$$
+```math
 \begin{align*}
 \nabla \cdot \vec{F} &= E - P \\
 \frac{\partial F^{(x)}}{\partial x} + \frac{\partial F^{(y)}}{\partial y} &= E - P \\
 \end{align*}
-$$
+```
 
 and writing the same conservation law for water vapor of local origin:
 
-$$
+```math
 \begin{align*}
 \nabla \cdot \vec{F_m} &= E - P_m \\
 \frac{\partial(\rho F^{(x)})}{\partial x} + \frac{\partial(\rho F^{(y)})}{\partial y} &= E - \rho P \\
 \end{align*}
-$$
+```
 
 These are the primary equations (2.1) and (2.2) of [[2]](#ref-2).
 
@@ -92,20 +100,32 @@ $$
 \rho^{k+1}_{i+1/2, j+1/2} = \frac{A_1}{A_0}
 $$
 
-### Case 1
+### Case 1 - wind from the south-west
 
-Wind from the south-west $F^{(x)}_{i, j+1/2} > 0$ and $F^{(y)}_{i+1/2, j} > 0$:
+defined by the conditions
 
-$$
+```math
+\begin{gather*}
+F^{(x)}_{i, j+1/2} > 0 \\
+F^{(y)}_{i+1/2, j} > 0
+\end{gather*}
+```
+
+following from (A.2)
+
+```math
+\begin{gather*}
 \frac{1}{2} ( \rho^{k+1}_{i+1/2, j+1/2} + \rho^{k}_{i+3/2, j+1/2} ) F_{i+1, j+1/2}^{(x)} \Delta y
 - \frac{1}{2} ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i-1/2, j+1/2} ) F_{i, j+1/2}^{(x)} \Delta y \\
 + \frac{1}{2} ( \rho^{k+1}_{i+1/2, j+1/2} + \rho^{k}_{i+1/2, j+3/2} ) F_{i+1/2, j+1}^{(y)} \Delta x
 - \frac{1}{2} ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i+1/2, j-1/2} ) F_{i+1/2, j}^{(y)} \Delta x \\
 = E_{i+1/2, j+1/2} \Delta x \Delta y 
 - \rho^{k+1}_{i+1/2, j+1/2} P_{i+1/2, j+1/2} \Delta x \Delta y
-$$
+\end{gather*}
+```
 
-$$
+```math
+\begin{gather*}
 \rho^{k+1}_{i+1/2, j+1/2} (
     2 P_{i+1/2, j+1/2} \Delta x \Delta y
     + F_{i+1, j+1/2}^{(x)} \Delta y
@@ -116,23 +136,24 @@ $$
 + \rho^{k}_{i+1/2, j+3/2} F_{i+1/2, j+1}^{(y)} \Delta x \\
 - ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i-1/2, j+1/2} ) F_{i, j+1/2}^{(x)} \Delta y \\
 - ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i+1/2, j-1/2} ) F_{i+1/2, j}^{(y)} \Delta x
-$$
+\end{gather*}
+```
 
-$$
+```math
 A_0 = 2 P_{i+1/2, j+1/2} \Delta x \Delta y
 + F_{i+1, j+1/2}^{(x)} \Delta y
-+ F_{i+1/2, j+1}^{(y)} \Delta x \\
-$$
++ F_{i+1/2, j+1}^{(y)} \Delta x
+```
 
-$$
+```math
+\begin{gather*}
 A_1 = 2 E_{i+1/2, j+1/2} \Delta x \Delta y
 + \rho^{k}_{i+3/2, j+1/2} F_{i+1, j+1/2}^{(x)} \Delta y
 + \rho^{k}_{i+1/2, j+3/2} F_{i+1/2, j+1}^{(y)} \Delta x \\
 - ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i-1/2, j+1/2} ) F_{i, j+1/2}^{(x)} \Delta y \\
 - ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i+1/2, j-1/2} ) F_{i+1/2, j}^{(y)} \Delta x
-$$
-
-
+\end{gather*}
+```
 
 ## References
 
