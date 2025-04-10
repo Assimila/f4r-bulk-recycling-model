@@ -57,19 +57,12 @@ Thus, the quantity $\rho$ represents the regional contribution to local precipit
 
 ### Conservation equations
 
-The model is essentially a conservation of atmospheric water vapor, with the following terms:
-
-- advection
-- evaporation
-- precipitation
-- change in stored atmospheric water vapor
-  - neglected at sufficiently long time scales
+The model is essentially a conservation of atmospheric water vapor
 
 $$
 \begin{align*}
 \nabla \cdot \vec{F} &= E - P \\
 \frac{\partial F^{(x)}}{\partial x} + \frac{\partial F^{(y)}}{\partial y} &= E - P \\
-\frac{\partial(wu)}{\partial x} + \frac{\partial(wv)}{\partial y} &= E - P
 \end{align*}
 $$
 
@@ -78,12 +71,68 @@ and writing the same conservation law for water vapor of local origin:
 $$
 \begin{align*}
 \nabla \cdot \vec{F_m} &= E - P_m \\
-\frac{\partial F^{(x)}_m}{\partial x} + \frac{\partial F^{(y)}_m}{\partial y} &= E - P_m \\
-\frac{\partial(w_m u)}{\partial x} + \frac{\partial(w_m v)}{\partial y} &= E- P_m \\
-\frac{\partial(\rho wu)}{\partial x} + \frac{\partial(\rho wv)}{\partial y} &= E - \rho P \\
 \frac{\partial(\rho F^{(x)})}{\partial x} + \frac{\partial(\rho F^{(y)})}{\partial y} &= E - \rho P \\
 \end{align*}
 $$
+
+These are the primary equations (2.1) and (2.2) of [[2]](#ref-2).
+
+## Iterative scheme
+
+We solve for the auxiliary variable $\rho$ using an iterative scheme.
+Iterations are indicated by the superscript $k$.
+Equation (A.2) of [[2]](#ref-2) is modified:
+
+- the left hand side according to the 4 cases of (A.4)
+- the right hand side $\rho \rightarrow \rho^{k+1}$
+
+Solutions are given in the form of (A.5)
+
+$$
+\rho^{k+1}_{i+1/2, j+1/2} = \frac{A_1}{A_0}
+$$
+
+### Case 1
+
+Wind from the south-west $F^{(x)}_{i, j+1/2} > 0$ and $F^{(y)}_{i+1/2, j} > 0$:
+
+$$
+\frac{1}{2} ( \rho^{k+1}_{i+1/2, j+1/2} + \rho^{k}_{i+3/2, j+1/2} ) F_{i+1, j+1/2}^{(x)} \Delta y
+- \frac{1}{2} ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i-1/2, j+1/2} ) F_{i, j+1/2}^{(x)} \Delta y \\
++ \frac{1}{2} ( \rho^{k+1}_{i+1/2, j+1/2} + \rho^{k}_{i+1/2, j+3/2} ) F_{i+1/2, j+1}^{(y)} \Delta x
+- \frac{1}{2} ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i+1/2, j-1/2} ) F_{i+1/2, j}^{(y)} \Delta x \\
+= E_{i+1/2, j+1/2} \Delta x \Delta y 
+- \rho^{k+1}_{i+1/2, j+1/2} P_{i+1/2, j+1/2} \Delta x \Delta y
+$$
+
+$$
+\rho^{k+1}_{i+1/2, j+1/2} (
+    2 P_{i+1/2, j+1/2} \Delta x \Delta y
+    + F_{i+1, j+1/2}^{(x)} \Delta y
+    + F_{i+1/2, j+1}^{(y)} \Delta x
+) \\
+= 2 E_{i+1/2, j+1/2} \Delta x \Delta y
++ \rho^{k}_{i+3/2, j+1/2} F_{i+1, j+1/2}^{(x)} \Delta y
++ \rho^{k}_{i+1/2, j+3/2} F_{i+1/2, j+1}^{(y)} \Delta x \\
+- ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i-1/2, j+1/2} ) F_{i, j+1/2}^{(x)} \Delta y \\
+- ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i+1/2, j-1/2} ) F_{i+1/2, j}^{(y)} \Delta x
+$$
+
+$$
+A_0 = 2 P_{i+1/2, j+1/2} \Delta x \Delta y
++ F_{i+1, j+1/2}^{(x)} \Delta y
++ F_{i+1/2, j+1}^{(y)} \Delta x \\
+$$
+
+$$
+A_1 = 2 E_{i+1/2, j+1/2} \Delta x \Delta y
++ \rho^{k}_{i+3/2, j+1/2} F_{i+1, j+1/2}^{(x)} \Delta y
++ \rho^{k}_{i+1/2, j+3/2} F_{i+1/2, j+1}^{(y)} \Delta x \\
+- ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i-1/2, j+1/2} ) F_{i, j+1/2}^{(x)} \Delta y \\
+- ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i+1/2, j-1/2} ) F_{i+1/2, j}^{(y)} \Delta x
+$$
+
+
 
 ## References
 
