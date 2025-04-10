@@ -320,6 +320,16 @@ A_1 = 2 E_{i+1/2, j+1/2} \Delta x \Delta y
 \end{gather*}
 ```
 
+### Notes
+
+The above relations define a system of equations for $\rho^{k+1}$.
+This is an implicit finite-difference scheme,
+whereby the value of $\rho^{k+1}$ at a grid point depends on the values of $\rho^{k}$ and $\rho^{k+1}$ at neighboring grid points.
+However the implicit dependency on $\rho^{k+1}$ is only ever left $(i-1/2)$ or down $(j-1/2)$.
+Therefore the system of equations can be solved from the bottom left corner of the grid to the top right corner.
+
+The term $A_0$ is constant.
+
 ## References
 
 <a id="ref-1"></a>1. Burde, G. I., 2006: Bulk Recycling Models with Incomplete Vertical Mixing.
