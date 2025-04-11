@@ -43,9 +43,13 @@ $$
 \frac{P_m}{P} = \frac{w_m}{w}
 $$
 
+### Fluxes
+
 Velocity $\vec{V} = (u, v)$: movement of the air in the atmosphere.
 
 Water vapor flux $\vec{F} = (F^{(x)}, F^{(y)}) = (uw, vw)$: movement of water vapor in the atmosphere.
+
+Evaporative (local) water vapor flux $\vec{F}_m = (F^{(x)}_m, F^{(y)}_m) = (u w_m, v w_m)$
 
 ### Auxiliary variable
 
@@ -63,7 +67,7 @@ to precipitation at the same point.
 
 Thus, the quantity $\rho$ represents the regional contribution to local precipitation.
 
-### Conservation equations
+## Conservation equations
 
 The model is essentially a conservation of atmospheric water vapor
 
