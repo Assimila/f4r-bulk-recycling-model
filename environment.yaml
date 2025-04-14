@@ -1,0 +1,8 @@
+name: f4r-bulk-recycling-model
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python
+  - numpy
+prefix: /home/sam/miniconda3/envs/f4r-bulk-recycling-model

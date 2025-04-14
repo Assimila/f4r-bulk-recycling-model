@@ -351,6 +351,37 @@ These are converted to SI units in (A.13) of [[2]](#ref-2), and then scaled:
     - note that this affects $\Delta x$ and $\Delta y$
 - $\vec{F}$ scaled by a factor of $8.64 \times 10^7 \times 1.02 \times 10^{-2} / H$
 
+## Implementation
+
+This is not a "big data" problem.
+It should run on a typical laptop without concern for memory or parallelization.
+
+Josie: use numpy, not xarray
+
+### Numpy indexing
+
+Standard numpy array indexing has the form `X[i, j]`,
+where `i` is the row index "down" and `j` is the column index "across".
+
+This model uses a cartesian xy grid indexed by `(i, j)`.
+Longitude maps to the first numpy index (row),
+and latitude to the second numpy index (column).
+
+## Pre-requisites
+
+You will need an [Anaconda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) python environment as defined by `environment.yml`.
+
+```bash
+conda env create -f environment.yml
+conda activate f4r-bulk-recycling-model
+```
+
+## Unit tests
+
+```bash
+python -m unittest discover -s tests/ -t .
+```
+
 ## References
 
 <a id="ref-1"></a>1. Burde, G. I., 2006: Bulk Recycling Models with Incomplete Vertical Mixing.
