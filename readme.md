@@ -334,6 +334,23 @@ Therefore the system of equations can be solved from the bottom left corner of t
 
 The term $A_0$ is constant.
 
+## Scaling and units
+
+Data should be properly scaled such that absolute values and derivatives have $\mathcal{O}(1)$ for numercal stability and accuracy.
+
+Input data have units and magnitudes as follows:
+
+- $E$ and $P$ in millimetre/day $\sim \mathcal{O}(1)$
+- Domain length scale $H$ in metres $\sim \mathcal{O}(10^5)$
+- $\vec{F}$ in centimetre $\times$ m/s $\sim \mathcal{O}(10)$
+
+These are converted to SI units in (A.13) of [[2]](#ref-2), and then scaled:
+
+- $E$ and $P$ remain in millimetre/day
+- Lengths scaled by $H$
+    - note that this affects $\Delta x$ and $\Delta y$
+- $\vec{F}$ scaled by a factor of $8.64 \times 10^7 \times 1.02 \times 10^{-2} / H$
+
 ## References
 
 <a id="ref-1"></a>1. Burde, G. I., 2006: Bulk Recycling Models with Incomplete Vertical Mixing.
