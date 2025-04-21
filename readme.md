@@ -342,7 +342,7 @@ Input data have units and magnitudes as follows:
 
 - $E$ and $P$ in millimetre/day $\sim \mathcal{O}(1)$
 - Domain length scale $H$ in metres $\sim \mathcal{O}(10^5)$
-- $\vec{F}$ in centimetre $\times$ m/s $\sim \mathcal{O}(10)$
+- $\vec{F}$ in millibar $\times$ m/s $\sim \mathcal{O}(10)$
 
 These are converted to SI units in (A.13) of [[2]](#ref-2), and then scaled:
 
@@ -350,6 +350,44 @@ These are converted to SI units in (A.13) of [[2]](#ref-2), and then scaled:
 - Lengths scaled by $H$
     - note that this affects $\Delta x$ and $\Delta y$
 - $\vec{F}$ scaled by a factor of $8.64 \times 10^7 \times 1.02 \times 10^{-2} / H$
+
+### flux units
+
+(2.1) of [[1]](#ref-1) defines the water vapor depth $w$ (in metres) as
+
+```math
+w = \frac{1}{\rho_L g} \int q \, dp
+```
+
+where $\rho_L$ is the density of liquid water,
+$g$ is the acceleration due to gravity,
+$q$ is the specific humidity,
+and $p$ is atmospheric pressure.
+
+(2.2) defines water vapor flux in units of ***water vapor depth x m/s*** or m^2/s
+
+```math
+F^{(x)} = \frac{1}{\rho_L g} \int q u \, dp
+```
+
+where $u$ is the wind velocity in m/s.
+
+(A.12) of [[2]](#ref-2) defines a flux-like quantity in the units of the DAO dataset
+
+```math
+F^{(x)}_D = 10^{-3} \int Q u \, dp' = \int q u \, dp'
+```
+
+where $p'$ is the pressure in mb (or hPa).
+
+Thus $F^{(x)}_D$ has units of mb x m/s, equivalent to $10^2$ kg/s^3.
+
+We can derive (A.13a) by converting $p'$ (mb) to $p$ (Pa),
+and ensuring that $F^{(x)}$ is expressed in SI units of m^2/s:
+
+```math
+F^{(x)} = \frac{10^2}{\rho_L g} F^{(x)}_D = 1.02 \times 10^{-2} F^{(x)}_D
+```
 
 ## Implementation
 
