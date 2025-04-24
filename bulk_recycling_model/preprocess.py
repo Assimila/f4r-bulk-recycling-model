@@ -26,11 +26,9 @@ def prepare_E(E: np.ndarray) -> np.ndarray:
             (N, M) array of evaporation on the primary grid.
             N = number of points in longitude.
             M = number of points in latitude.
-            Should have units of mm/day.
 
     Returns:
         (N-1, M-1) array of evaporation on the secondary grid.
-        Units: mm/day.
     """
     _check_input_array(E)
 
@@ -61,11 +59,9 @@ def prepare_Fx_left(Fx: np.ndarray) -> np.ndarray:
             (N, M) array of longitudinal water vapor flux on the primary grid.
             N = number of points in longitude.
             M = number of points in latitude.
-            Should have units of centimetre x m/s.
 
     Returns:
         (N-1, M-1) array of longitudinal water vapor flux on the secondary grid.
-        Units: centimetre x m/s.
     """
     _check_input_array(Fx)
 
@@ -94,11 +90,9 @@ def prepare_Fx_right(Fx: np.ndarray) -> np.ndarray:
             (N, M) array of longitudinal water vapor flux on the primary grid.
             N = number of points in longitude.
             M = number of points in latitude.
-            Should have units of centimetre x m/s.
 
     Returns:
         (N-1, M-1) array of longitudinal water vapor flux on the secondary grid.
-        Units: centimetre x m/s.
     """
     _check_input_array(Fx)
 
@@ -127,11 +121,9 @@ def prepare_Fy_bottom(Fy: np.ndarray) -> np.ndarray:
             (N, M) array of latitudinal water vapor flux on the primary grid.
             N = number of points in longitude.
             M = number of points in latitude.
-            Should have units of centimetre x m/s.
 
     Returns:
         (N-1, M-1) array of latitudinal water vapor flux on the secondary grid.
-        Units: centimetre x m/s.
     """
     _check_input_array(Fy)
 
@@ -160,11 +152,9 @@ def prepare_Fy_top(Fy: np.ndarray) -> np.ndarray:
             (N, M) array of latitudinal water vapor flux on the primary grid.
             N = number of points in longitude.
             M = number of points in latitude.
-            Should have units of centimetre x m/s.
 
     Returns:
         (N-1, M-1) array of latitudinal water vapor flux on the secondary grid.
-        Units: centimetre x m/s.
     """
     _check_input_array(Fy)
 
