@@ -104,6 +104,21 @@ $$
 \rho^{k+1}_{i+1/2, j+1/2} = \frac{A_1}{A_0}
 $$
 
+We express $A_1$ via coefficients of $\rho$,
+where the subscript of $\alpha$ indicates the relative grid point
+(center, up, right, down, left).
+
+```math
+\begin{align*}
+A_1 &= \alpha_1 \\
+&+ \alpha_{C} \times \rho^{k}_{i+1/2, j+1/2} \\
+&+ \alpha_{U} \times \rho^{k}_{i+1/2, j+3/2} \\
+&+ \alpha_{R} \times \rho^{k}_{i+3/2, j+1/2} \\
+&+ \alpha_{D} \times \rho^{k+1}_{i+1/2, j-1/2} \\
+&+ \alpha_{L} \times \rho^{k+1}_{i-1/2, j+1/2}
+\end{align*}
+```
+
 ### Case 1 - wind from the south-west
 
 defined by the conditions
@@ -157,6 +172,17 @@ A_1 = 2 E_{i+1/2, j+1/2} \Delta x \Delta y
 + ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i-1/2, j+1/2} ) F_{i, j+1/2}^{(x)} \Delta y \\
 + ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k+1}_{i+1/2, j-1/2} ) F_{i+1/2, j}^{(y)} \Delta x
 \end{gather*}
+```
+
+```math
+\begin{align*}
+\alpha_1 &= 2 E_{i+1/2, j+1/2} \Delta x \Delta y \\
+\alpha_{C} &= F_{i, j+1/2}^{(x)} \Delta y + F_{i+1/2, j}^{(y)} \Delta x \\
+\alpha_{U} &= - F_{i+1/2, j+1}^{(y)} \Delta x \\
+\alpha_{R} &= - F_{i+1, j+1/2}^{(x)} \Delta y \\
+\alpha_{D} &= F_{i+1/2, j}^{(y)} \Delta x \\
+\alpha_{L} &= F_{i, j+1/2}^{(x)} \Delta y
+\end{align*}
 ```
 
 ### Case 2 - wind from the north-west
@@ -214,6 +240,17 @@ A_1 = 2 E_{i+1/2, j+1/2} \Delta x \Delta y
 \end{gather*}
 ```
 
+```math
+\begin{align*}
+\alpha_1 &= 2 E_{i+1/2, j+1/2} \Delta x \Delta y \\
+\alpha_{C} &= F_{i, j+1/2}^{(x)} \Delta y - F_{i+1/2, j+1}^{(y)} \Delta x \\
+\alpha_{U} &= - F_{i+1/2, j+1}^{(y)} \Delta x \\
+\alpha_{R} &= - F_{i+1, j+1/2}^{(x)} \Delta y \\
+\alpha_{D} &= F_{i+1/2, j}^{(y)} \Delta x \\
+\alpha_{L} &= F_{i, j+1/2}^{(x)} \Delta y
+\end{align*}
+```
+
 ### Case 3 - wind from the north-east
 
 defined by the conditions
@@ -267,6 +304,17 @@ A_1 = 2 E_{i+1/2, j+1/2} \Delta x \Delta y
 - ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k}_{i+3/2, j+1/2} ) F_{i+1, j+1/2}^{(x)} \Delta y \\
 - ( \rho^{k}_{i+1/2, j+1/2} + \rho^{k}_{i+1/2, j+3/2} ) F_{i+1/2, j+1}^{(y)} \Delta x
 \end{gather*}
+```
+
+```math
+\begin{align*}
+\alpha_1 &= 2 E_{i+1/2, j+1/2} \Delta x \Delta y \\
+\alpha_{C} &= - F_{i+1, j+1/2}^{(x)} \Delta y - F_{i+1/2, j+1}^{(y)} \Delta x \\
+\alpha_{U} &= - F_{i+1/2, j+1}^{(y)} \Delta x \\
+\alpha_{R} &= - F_{i+1, j+1/2}^{(x)} \Delta y \\
+\alpha_{D} &= F_{i+1/2, j}^{(y)} \Delta x \\
+\alpha_{L} &= F_{i, j+1/2}^{(x)} \Delta y
+\end{align*}
 ```
 
 ### Case 4 - wind from the south-east
@@ -324,6 +372,17 @@ A_1 = 2 E_{i+1/2, j+1/2} \Delta x \Delta y
 \end{gather*}
 ```
 
+```math
+\begin{align*}
+\alpha_1 &= 2 E_{i+1/2, j+1/2} \Delta x \Delta y \\
+\alpha_{C} &= - F_{i+1, j+1/2}^{(x)} \Delta y + F_{i+1/2, j}^{(y)} \Delta x \\
+\alpha_{U} &= - F_{i+1/2, j+1}^{(y)} \Delta x \\
+\alpha_{R} &= - F_{i+1, j+1/2}^{(x)} \Delta y \\
+\alpha_{D} &= F_{i+1/2, j}^{(y)} \Delta x \\
+\alpha_{L} &= F_{i, j+1/2}^{(x)} \Delta y
+\end{align*}
+```
+
 ### Notes
 
 The above relations define a system of equations for $\rho^{k+1}$.
@@ -331,8 +390,6 @@ This is an implicit finite-difference scheme,
 whereby the value of $\rho^{k+1}$ at a grid point depends on the values of $\rho^{k}$ and $\rho^{k+1}$ at neighboring grid points.
 However the implicit dependency on $\rho^{k+1}$ is only ever left $(i-1/2)$ or down $(j-1/2)$.
 Therefore the system of equations can be solved from the bottom left corner of the grid to the top right corner.
-
-The term $A_0$ is constant.
 
 ## Scaling and units
 
