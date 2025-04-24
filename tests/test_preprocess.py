@@ -67,3 +67,43 @@ class Test_prepare_Fy_top(unittest.TestCase):
         Fy = np.arange(9).reshape(3, 3)
         expected = np.array([[2.5, 3.5], [5.5, 6.5]], dtype=float)
         np.testing.assert_array_almost_equal(preprocess.prepare_Fy_top(Fy), expected)
+
+
+class Test_calculate_precipitation(unittest.TestCase):
+    def test_constant_flux(self):
+        # with no divergence in flux, precipitation = evaporation
+        Fx_left = Fx_right = np.full((2, 2), 1)
+        Fy_bottom = Fy_top = np.full((2, 2), -1)
+        E = np.array([[1, 2], [3, 4]])
+        dx = dy = 1
+        expected_precipitation = E
+        np.testing.assert_array_almost_equal(
+            preprocess.calculate_precipitation(Fx_left, Fx_right, Fy_bottom, Fy_top, E, dx, dy),
+            expected_precipitation,
+        )
+
+    def test_p_lower_e(self):
+        # div flux > 0 implies precipitation < evaporation
+        Fx_left = np.array([[0, 1], [1, 2]])
+        Fx_right = Fx_left + 1
+        Fy_bottom = Fy_top = np.zeros((2, 2))
+        E = np.array([[2, 2], [2, 2]])
+        dx = dy = 1
+        expected_precipitation = np.array([[1, 1], [1, 1]])
+        np.testing.assert_array_almost_equal(
+            preprocess.calculate_precipitation(Fx_left, Fx_right, Fy_bottom, Fy_top, E, dx, dy),
+            expected_precipitation,
+        )
+
+    def test_p_higher_e(self):
+        # div flux < 0 implies precipitation > evaporation
+        Fx_left = np.array([[0, 1], [1, 2]])
+        Fx_right = Fx_left - 1
+        Fy_bottom = Fy_top = np.zeros((2, 2))
+        E = np.array([[2, 2], [2, 2]])
+        dx = dy = 1
+        expected_precipitation = np.array([[3, 3], [3, 3]])
+        np.testing.assert_array_almost_equal(
+            preprocess.calculate_precipitation(Fx_left, Fx_right, Fy_bottom, Fy_top, E, dx, dy),
+            expected_precipitation,
+        )

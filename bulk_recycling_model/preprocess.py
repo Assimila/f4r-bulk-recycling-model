@@ -168,3 +168,42 @@ def prepare_Fy_top(Fy: np.ndarray) -> np.ndarray:
     )
 
     return Fy_top
+
+
+def calculate_precipitation(
+    Fx_left: np.ndarray,
+    Fx_right: np.ndarray,
+    Fy_bottom: np.ndarray,
+    Fy_top: np.ndarray,
+    E: np.ndarray,
+    dx: float,
+    dy: float,
+) -> np.ndarray:
+    """
+    We could drive the model using both precipitation and evaporation data.
+    However, if there are biases in the input data, this would perturb the equation of state,
+    resulting in errors in the recycling ratio.
+
+    Here we disregard the precipitation data,
+    and use the equation of state + evaporation data to calculate a consistent precipitation.
+
+    The level of bias in the input data can be estimated by comparing this precipitation
+    with the input precipitation data.
+
+    Units: It is important to use consistent units here.
+    Preferably scaled units for all variables.
+
+    Inputs and output should have shape (N, M) on the secondary grid.
+    N = number of points in longitude.
+    M = number of points in latitude.
+
+    Args:
+        Fx_left: longitudinal water vapor flux on the left hand side of each cell
+        Fx_right: longitudinal water vapor flux on the right hand side of each cell
+        Fy_bottom: latitudinal water vapor flux on the bottom side of each cell
+        Fy_top: latitudinal water vapor flux on the top side of each cell
+        E: evaporation
+        dx: longitudinal grid spacing
+        dy: latitudinal grid spacing
+    """
+    return E - (Fx_right - Fx_left) / dx - (Fy_top - Fy_bottom) / dy

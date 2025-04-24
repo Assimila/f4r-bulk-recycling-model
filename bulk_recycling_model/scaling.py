@@ -4,7 +4,11 @@ from typing import Literal
 import networkx as nx
 import numpy as np
 
-type UnitSystem = Literal["natural", "SI", "scaled"]
+type UnitSystem = Literal[
+    "natural",  # natural units of the DAO dataset
+    "SI",
+    "scaled",  # of order ~ 1, used by the model for numerical stability
+]
 
 
 class Scaling:
