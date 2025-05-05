@@ -1,14 +1,14 @@
+import enum
 import itertools
-from typing import Literal
 
 import networkx as nx
 import numpy as np
 
-type UnitSystem = Literal[
-    "natural",  # natural units of the DAO dataset
-    "SI",
-    "scaled",  # of order ~ 1, used by the model for numerical stability
-]
+
+class UnitSystem(enum.StrEnum):
+    natural = "natural"  # natural units of the DAO dataset
+    SI = "SI"
+    scaled = "scaled"  # of order ~ 1, used by the model for numerical stability
 
 
 class Scaling:
@@ -34,7 +34,7 @@ class VariableScaling:
         """
         self.conversion_factors: nx.DiGraph = nx.DiGraph()
         # add nodes for UnitSystem
-        for unit in UnitSystem.__value__.__args__:
+        for unit in UnitSystem:
             self.conversion_factors.add_node(unit)
 
     def add_conversion(
@@ -91,8 +91,8 @@ class EPScaling(VariableScaling):
 
     def __init__(self, domain_length_scale: float):
         super().__init__(domain_length_scale)
-        self.add_conversion("natural", "SI", 1e-3 / 24 / 60 / 60)  # mm/day to m/s
-        self.add_conversion("natural", "scaled", 1.0)
+        self.add_conversion(UnitSystem.natural, UnitSystem.SI, 1e-3 / 24 / 60 / 60)  # mm/day to m/s
+        self.add_conversion(UnitSystem.natural, UnitSystem.scaled, 1.0)
 
 
 class DistanceScaling(VariableScaling):
@@ -106,8 +106,8 @@ class DistanceScaling(VariableScaling):
 
     def __init__(self, domain_length_scale: float):
         super().__init__(domain_length_scale)
-        self.add_conversion("natural", "SI", 1.0)
-        self.add_conversion("SI", "scaled", 1.0 / domain_length_scale)
+        self.add_conversion(UnitSystem.natural, UnitSystem.SI, 1.0)
+        self.add_conversion(UnitSystem.SI, UnitSystem.scaled, 1.0 / domain_length_scale)
 
 
 class WaterVaporFluxScaling(VariableScaling):
@@ -121,5 +121,5 @@ class WaterVaporFluxScaling(VariableScaling):
 
     def __init__(self, domain_length_scale: float):
         super().__init__(domain_length_scale)
-        self.add_conversion("natural", "SI", 1.02e-2)  # mb x m/s to m^2/s
-        self.add_conversion("SI", "scaled", 1e3 * 24 * 60 * 60 / domain_length_scale)
+        self.add_conversion(UnitSystem.natural, UnitSystem.SI, 1.02e-2)  # mb x m/s to m^2/s
+        self.add_conversion(UnitSystem.SI, UnitSystem.scaled, 1e3 * 24 * 60 * 60 / domain_length_scale)
