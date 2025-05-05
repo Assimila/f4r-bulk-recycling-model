@@ -1,3 +1,5 @@
+from typing import Generator, Iterable
+
 import numpy as np
 import numpy.typing as npt
 
@@ -144,3 +146,59 @@ def inflow_mask(
     outflow[_no_buffer, _no_buffer] = True
     # then invert
     return ~outflow
+
+
+def diagonal(
+    N: int,
+    M: int,
+    diagonal: int = 0,
+) -> Generator[tuple[int, int]]:
+    """
+    Interpret (N, M) as a 2D array where:
+    N = number of points in longitude.
+    M = number of points in latitude.
+
+    Iterate over the diagonal of the 2D array in physical space.
+
+    Diagonal 0 runs from top left corner (0, M-1), (1, M-2), ...
+
+    Diagonal 1 is the first super-diagonal.
+    Diagonal 1 runs from (1, M-1), (2, M-2), ...
+
+    Arguments:
+        N: number of points in longitude.
+        M: number of points in latitude.
+        diagonal: diagonal to iterate over.
+            0 is the main diagonal.
+            range of values is (-M+1, N-1) inclusive.
+
+    Yields:
+        (i, j): pairs of indices
+    """
+    for i in range(N):
+        j = M - 1 - i + diagonal
+        if 0 <= j < M:
+            yield i, j
+
+
+def drop_first[T](gen: Iterable[T]) -> Generator[T]:
+    """
+    Drop the first element
+    """
+    first = True
+    for item in gen:
+        if first:
+            first = False
+            continue
+        yield item
+
+
+def drop_last[T](gen: Iterable[T]) -> Generator[T]:
+    """
+    Drop the last element
+    """
+    prev = None
+    for item in gen:
+        if prev is not None:
+            yield prev
+        prev = item

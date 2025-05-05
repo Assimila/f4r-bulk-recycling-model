@@ -122,3 +122,53 @@ class Test_inflow_mask(unittest.TestCase):
             ]
         )
         np.testing.assert_array_equal(mask, expected)
+
+
+# numpy indexing (i, j) = (lon, lat)
+# 0,2 1,2 2,2 3,2
+# 0,1 1,1 2,1 3,1
+# 0,0 1,0 2,0 3,0
+
+
+class Test_diagonal(unittest.TestCase):
+    def test_ok(self):
+        N, M = 4, 3
+        assert list(utils.diagonal(N, M, 0)) == [(0, 2), (1, 1), (2, 0)]
+        assert list(utils.diagonal(N, M, 1)) == [(1, 2), (2, 1), (3, 0)]
+        assert list(utils.diagonal(N, M, -1)) == [(0, 1), (1, 0)]
+        assert list(utils.diagonal(N, M, -2)) == [(0, 0)]
+        assert list(utils.diagonal(N, M, -3)) == []
+
+
+class Test_drop_first(unittest.TestCase):
+    def test_ok(self):
+        result = list(utils.drop_first(range(5)))
+        expected = [1, 2, 3, 4]
+        self.assertEqual(result, expected)
+
+    def test_empty(self):
+        result = list(utils.drop_first([]))
+        expected = []
+        self.assertEqual(result, expected)
+
+    def test_one(self):
+        result = list(utils.drop_first([1]))
+        expected = []
+        self.assertEqual(result, expected)
+
+
+class Test_drop_last(unittest.TestCase):
+    def test_ok(self):
+        result = list(utils.drop_last(range(5)))
+        expected = [0, 1, 2, 3]
+        self.assertEqual(result, expected)
+
+    def test_empty(self):
+        result = list(utils.drop_last([]))
+        expected = []
+        self.assertEqual(result, expected)
+
+    def test_one(self):
+        result = list(utils.drop_last([1]))
+        expected = []
+        self.assertEqual(result, expected)
