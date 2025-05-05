@@ -69,7 +69,7 @@ class VariableScaling:
             raise ValueError(f"No conversion from {from_units} to {to_units}")
         factor = 1.0
         for n1, n2 in itertools.pairwise(path):
-            factor *= self.conversion_factors[n1][n2]["factor"]
+            factor *= self.conversion_factors.edges[n1, n2]["factor"]
         return factor
 
     def convert[T: (float, np.ndarray)](self, value: T, from_units: UnitSystem, to_units: UnitSystem) -> T:
