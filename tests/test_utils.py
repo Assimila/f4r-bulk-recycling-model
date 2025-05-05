@@ -84,3 +84,41 @@ class Test_check_tb_flux(unittest.TestCase):
         Fy_top = np.array([[2, 5], [4, 6]])
         with self.assertRaises(ValueError):
             utils.check_tb_flux(Fy_top, Fy_bottom)
+
+
+class Test_outflow_mask(unittest.TestCase):
+    def test_ok(self):
+        Fx_left = np.array([[-1, 0, 1], [0, 0, 0], [0, 0, 0]])
+        Fx_right = np.array([[0, 0, 0], [0, 0, 0], [-1, 0, 1]])
+        Fy_bottom = np.array([[-1, 0, 0], [0, 0, 0], [1, 0, 0]])
+        Fy_top = np.array([[0, 0, -1], [0, 0, 0], [0, 0, 1]])
+        mask = utils.outflow_mask(Fx_left, Fx_right, Fy_bottom, Fy_top)
+        expected = np.array(
+            [
+                [0, 1, 0, 0, 0],
+                [1, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 1],
+                [0, 0, 0, 1, 0],
+            ]
+        )
+        np.testing.assert_array_equal(mask, expected)
+
+
+class Test_inflow_mask(unittest.TestCase):
+    def test_ok(self):
+        Fx_left = np.array([[-1, 0, 1], [0, 0, 0], [0, 0, 0]])
+        Fx_right = np.array([[0, 0, 0], [0, 0, 0], [-1, 0, 1]])
+        Fy_bottom = np.array([[-1, 0, 0], [0, 0, 0], [1, 0, 0]])
+        Fy_top = np.array([[0, 0, -1], [0, 0, 0], [0, 0, 1]])
+        mask = utils.inflow_mask(Fx_left, Fx_right, Fy_bottom, Fy_top)
+        expected = np.array(
+            [
+                [1, 0, 1, 1, 1],
+                [0, 0, 0, 0, 1],
+                [1, 0, 0, 0, 1],
+                [1, 0, 0, 0, 0],
+                [1, 1, 1, 0, 1],
+            ]
+        )
+        np.testing.assert_array_equal(mask, expected)

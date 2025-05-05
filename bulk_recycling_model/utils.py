@@ -1,7 +1,8 @@
 import numpy as np
+import numpy.typing as npt
 
 
-def buffer(a: np.ndarray, value = np.nan) -> np.ndarray:
+def buffer(a: np.ndarray, value=np.nan) -> np.ndarray:
     """
     Add a buffer of some constant value around the array.
     """
@@ -32,7 +33,7 @@ def check_lr_flux(
 ) -> None:
     """
     Check that the fluxes are consistent across the grid.
-    
+
     The x flux on the right hand side of each cell should be equal to the x flux
     on the left hand side of the next cell.
 
@@ -57,7 +58,7 @@ def check_tb_flux(
 ) -> None:
     """
     Check that the fluxes are consistent across the grid.
-    
+
     The y flux on the top side of each cell should be equal to the y flux
     on the bottom side of the next cell.
 
@@ -74,3 +75,72 @@ def check_tb_flux(
     """
     if not np.all(Fy_top[:, :-1] == Fy_bottom[:, 1:]):
         raise ValueError("Inconsistent Fy")
+
+
+def outflow_mask(
+    Fx_left: np.ndarray,
+    Fx_right: np.ndarray,
+    Fy_bottom: np.ndarray,
+    Fy_top: np.ndarray,
+) -> npt.NDArray[np.bool_]:
+    """
+    Create a mask for cells in the buffered region around the secondary grid.
+    These are cells where the water vapor flux flows outwards from the model domain.
+    These cells are solved by extrapolation.
+
+    Inputs and outputs should have shape (N, M) on the secondary grid.
+    N = number of points in longitude.
+    M = number of points in latitude.
+
+    Args:
+        Fx_left: longitudinal water vapor flux on the left hand side of each cell
+        Fx_right: longitudinal water vapor flux on the right hand side of each cell
+        Fy_bottom: latitudinal water vapor flux on the bottom side of each cell
+        Fy_top: latitudinal water vapor flux on the top side of each cell
+
+    Returns: boolean array of shape (N+2, M+2)
+    """
+    (N, M) = Fx_left.shape
+    mask = np.full((N + 2, M + 2), False, dtype=bool)
+    # this slice cuts off the buffer
+    _no_buffer = slice(1, -1)
+    # left
+    mask[0, _no_buffer] = Fx_left[0, :] < 0
+    # right
+    mask[-1, _no_buffer] = Fx_right[-1, :] > 0
+    # bottom
+    mask[_no_buffer, 0] = Fy_bottom[:, 0] < 0
+    # top
+    mask[_no_buffer, -1] = Fy_top[:, -1] > 0
+    return mask
+
+
+def inflow_mask(
+    Fx_left: np.ndarray,
+    Fx_right: np.ndarray,
+    Fy_bottom: np.ndarray,
+    Fy_top: np.ndarray,
+) -> npt.NDArray[np.bool_]:
+    """
+    Inverse of outflow_mask in the buffered region around the secondary grid.
+    No water vapor of local origin $w_m$ is present in these cells.
+
+    Inputs and outputs should have shape (N, M) on the secondary grid.
+    N = number of points in longitude.
+    M = number of points in latitude.
+
+    Args:
+        Fx_left: longitudinal water vapor flux on the left hand side of each cell
+        Fx_right: longitudinal water vapor flux on the right hand side of each cell
+        Fy_bottom: latitudinal water vapor flux on the bottom side of each cell
+        Fy_top: latitudinal water vapor flux on the top side of each cell
+
+    Returns: boolean array of shape (N+2, M+2)
+    """
+    outflow = outflow_mask(Fx_left, Fx_right, Fy_bottom, Fy_top)
+    # this slice cuts off the buffer
+    _no_buffer = slice(1, -1)
+    # using the outflow mask, first set all interior cells to True
+    outflow[_no_buffer, _no_buffer] = True
+    # then invert
+    return ~outflow

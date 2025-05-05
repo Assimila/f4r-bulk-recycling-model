@@ -38,12 +38,7 @@ class Coefficients:
             P: precipitation
             dx: longitudinal grid spacing
             dy: latitudinal grid spacing
-            classification: precomputed classification of the cells.
-                Will be computed if not provided.
         """
-        utils.check_lr_flux(Fx_left, Fx_right)
-        utils.check_tb_flux(Fy_top, Fy_bottom)
-
         self.Fx_left = Fx_left
         self.Fx_right = Fx_right
         self.Fy_bottom = Fy_bottom
@@ -87,19 +82,19 @@ class Coefficients:
         """
         Fx_left = Fx_left.copy()
         # on the left boundary, set inflow to zero
-        Fx_left[0, :] = np.where(Fx_left[0, :] > 0, 0, Fx_left[0, :])
+        Fx_left[0, :] = np.where(Fx_left[0, :] >= 0, 0, Fx_left[0, :])
 
         Fx_right = Fx_right.copy()
         # on the right boundary, set inflow to zero
-        Fx_right[-1, :] = np.where(Fx_right[-1, :] < 0, 0, Fx_right[-1, :])
+        Fx_right[-1, :] = np.where(Fx_right[-1, :] <= 0, 0, Fx_right[-1, :])
 
         Fy_bottom = Fy_bottom.copy()
         # on the bottom boundary, set inflow to zero
-        Fy_bottom[:, 0] = np.where(Fy_bottom[:, 0] > 0, 0, Fy_bottom[:, 0])
+        Fy_bottom[:, 0] = np.where(Fy_bottom[:, 0] >= 0, 0, Fy_bottom[:, 0])
 
         Fy_top = Fy_top.copy()
         # on the top boundary, set inflow to zero
-        Fy_top[:, -1] = np.where(Fy_top[:, -1] < 0, 0, Fy_top[:, -1])
+        Fy_top[:, -1] = np.where(Fy_top[:, -1] <= 0, 0, Fy_top[:, -1])
 
         return Fx_left, Fx_right, Fy_bottom, Fy_top
 
@@ -244,3 +239,33 @@ class Coefficients:
         Fx_left = self.Fx_left_adjusted
 
         return Fx_left * self.dy
+    
+    # For each coefficient, provide a version with a buffer of NaNs
+    
+    @cached_property
+    def A_0_buffered(self):
+        return utils.buffer(self.A_0)
+
+    @cached_property
+    def alpha_1_buffered(self):
+        return utils.buffer(self.alpha_1)
+    
+    @cached_property
+    def alpha_C_buffered(self):
+        return utils.buffer(self.alpha_C)
+    
+    @cached_property
+    def alpha_U_buffered(self):
+        return utils.buffer(self.alpha_U)
+    
+    @cached_property
+    def alpha_R_buffered(self):
+        return utils.buffer(self.alpha_R)
+    
+    @cached_property
+    def alpha_D_buffered(self):
+        return utils.buffer(self.alpha_D)
+    
+    @cached_property
+    def alpha_L_buffered(self):
+        return utils.buffer(self.alpha_L)

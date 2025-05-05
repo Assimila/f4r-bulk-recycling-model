@@ -3,7 +3,8 @@ import numpy as np
 
 def _check_input_array(array: np.ndarray) -> None:
     """
-    Basic sanity checks on input data.
+    Basic sanity checks on input data
+    on the primary grid.
     """
     if array.ndim != 2:
         raise ValueError("Input array must be 2D")

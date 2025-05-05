@@ -410,6 +410,12 @@ this flux carries evaporative (local) water vapor out of the domain.
 The auxiliary variable $\rho$ extends beyond the domain,
 defined by extrapolation.
 
+### Buffered domain
+
+The model is solved for $\rho$ on the secondary grid.
+Due to the nature of the boundary conditions, we buffer the secondary grid by 1 grid point in each direction.
+The domain boundary sits between the outermost grid points and the original (unbuffered) grid points.
+
 ## Scaling and units
 
 Data should be properly scaled such that absolute values and derivatives have $\mathcal{O}(1)$ for numercal stability and accuracy.
