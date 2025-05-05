@@ -12,7 +12,7 @@ class Test_handle_inflow_boundaries(unittest.TestCase):
         Fx_right = np.array([[2, 2], [1, -1]])
         Fy_bottom = np.array([[1, 2], [-1, 2]])
         Fy_top = np.array([[2, 1], [2, -1]])
-        l, r, b, t = coefficients.Coefficients.handle_inflow_boundaries(Fx_left, Fx_right, Fy_bottom, Fy_top)
+        l, r, b, t = coefficients.Coefficients.handle_inflow_boundaries(Fx_left, Fx_right, Fy_bottom, Fy_top)  # noqa: E741
         # test for zeros
         assert np.all(l == np.array([[0, -1], [2, 2]]))
         assert np.all(r == np.array([[2, 2], [1, 0]]))
