@@ -391,6 +391,25 @@ whereby the value of $\rho^{k+1}$ at a grid point depends on the values of $\rho
 However the implicit dependency on $\rho^{k+1}$ is only ever left $(i-1/2)$ or down $(j-1/2)$.
 Therefore the system of equations can be solved from the bottom left corner of the grid to the top right corner.
 
+### Boundary conditions
+
+When solving for a grid point at the edge of the domain,
+there are dependencies on neighboring grid points outside of the domain.
+
+#### Inflow boundary
+
+Where the water vapor flux $\vec{F}$ is directed into the domain,
+we assume that this flux brings no evaporative (local) water vapor
+across the boundary, $\vec{F}_m = 0$.
+
+#### Outflow boundary
+
+Where the water vapor flux $\vec{F}$ is directed out of the domain,
+this flux carries evaporative (local) water vapor out of the domain.
+
+The auxiliary variable $\rho$ extends beyond the domain,
+defined by extrapolation.
+
 ## Scaling and units
 
 Data should be properly scaled such that absolute values and derivatives have $\mathcal{O}(1)$ for numercal stability and accuracy.

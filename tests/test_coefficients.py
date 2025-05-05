@@ -6,51 +6,89 @@ from bulk_recycling_model import coefficients
 from bulk_recycling_model.cases import Wind
 
 
+class Test_handle_inflow_boundaries(unittest.TestCase):
+    def test_ok(self):
+        Fx_left = np.array([[1, -1], [2, 2]])
+        Fx_right = np.array([[2, 2], [1, -1]])
+        Fy_bottom = np.array([[1, 2], [-1, 2]])
+        Fy_top = np.array([[2, 1], [2, -1]])
+        l, r, b, t = coefficients.Coefficients.handle_inflow_boundaries(Fx_left, Fx_right, Fy_bottom, Fy_top)
+        # test for zeros
+        assert np.all(l == np.array([[0, -1], [2, 2]]))
+        assert np.all(r == np.array([[2, 2], [1, 0]]))
+        assert np.all(b == np.array([[0, 2], [-1, 2]]))
+        assert np.all(t == np.array([[2, 1], [2, 0]]))
+
+
 class Test_Coefficients(unittest.TestCase):
-    def setUp(self):
-        # there values are completely un-physical
-        Fx_left = np.array([[1, 1], [1, 1]])
-        Fx_right = np.array([[2, 2], [2, 2]])
-        Fy_bottom = np.array([[3, 3], [3, 3]])
-        Fy_top = np.array([[4, 4], [4, 4]])
-        E = np.array([[6, 6], [6, 6]])
-        P = np.array([[5, 5], [5, 5]])
+    def test_SW(self):
+        Fx_left = Fx_right = np.full((3, 3), 1)
+        Fy_bottom = Fy_top = np.full((3, 3), 1)
+        E = np.full((3, 3), 6)
+        P = np.full((3, 3), 5)
         dx = dy = 1
-        # force the classification
-        classification = np.array([[Wind.SW, Wind.NW], [Wind.NE, Wind.SE]], dtype=np.int8)
-        self.coefficients = coefficients.Coefficients(
-            Fx_left, Fx_right, Fy_bottom, Fy_top, E, P, dx, dy, classification
-        )
+        self.coefficients = coefficients.Coefficients(Fx_left, Fx_right, Fy_bottom, Fy_top, E, P, dx, dy)
 
-    def test_A_0(self):
-        expected = np.array(
-            [
-                [2 * 5 + 2 + 4, 2 * 5 + 2 - 3],
-                [2 * 5 - 1 - 3, 2 * 5 - 1 + 4],
-            ]
-        )
-        np.testing.assert_array_equal(self.coefficients.A_0, expected)
+        # check the center of the grid (no boundary adjustments)
+        assert self.coefficients.classification[1, 1] == Wind.SW
+        assert self.coefficients.A_0[1, 1] == 2 * 5 + 1 + 1
+        assert self.coefficients.alpha_1[1, 1] == 2 * 6
+        assert self.coefficients.alpha_C[1, 1] == 1 + 1
+        assert self.coefficients.alpha_U[1, 1] == -1
+        assert self.coefficients.alpha_R[1, 1] == -1
+        assert self.coefficients.alpha_D[1, 1] == 1
+        assert self.coefficients.alpha_L[1, 1] == 1
 
-    def test_alpha_1(self):
-        expected = np.array([[12, 12], [12, 12]])
-        np.testing.assert_array_equal(self.coefficients.alpha_1, expected)
+    def test_NW(self):
+        Fx_left = Fx_right = np.full((3, 3), 1)
+        Fy_bottom = Fy_top = np.full((3, 3), -1)
+        E = np.full((3, 3), 6)
+        P = np.full((3, 3), 5)
+        dx = dy = 1
+        self.coefficients = coefficients.Coefficients(Fx_left, Fx_right, Fy_bottom, Fy_top, E, P, dx, dy)
 
-    def test_alpha_C(self):
-        expected = np.array([[1 + 3, 1 - 4], [-2 - 4, -2 + 3]])
-        np.testing.assert_array_equal(self.coefficients.alpha_C, expected)
+        # check the center of the grid (no boundary adjustments)
+        assert self.coefficients.classification[1, 1] == Wind.NW
+        assert self.coefficients.A_0[1, 1] == 2 * 5 + 1 + 1
+        assert self.coefficients.alpha_1[1, 1] == 2 * 6
+        assert self.coefficients.alpha_C[1, 1] == 1 + 1
+        assert self.coefficients.alpha_U[1, 1] == 1
+        assert self.coefficients.alpha_R[1, 1] == -1
+        assert self.coefficients.alpha_D[1, 1] == -1
+        assert self.coefficients.alpha_L[1, 1] == 1
 
-    def test_alpha_U(self):
-        expected = np.array([[-4, -4], [-4, -4]])
-        np.testing.assert_array_equal(self.coefficients.alpha_U, expected)
+    def test_NE(self):
+        Fx_left = Fx_right = np.full((3, 3), -1)
+        Fy_bottom = Fy_top = np.full((3, 3), -1)
+        E = np.full((3, 3), 6)
+        P = np.full((3, 3), 5)
+        dx = dy = 1
+        self.coefficients = coefficients.Coefficients(Fx_left, Fx_right, Fy_bottom, Fy_top, E, P, dx, dy)
 
-    def test_alpha_R(self):
-        expected = np.array([[-2, -2], [-2, -2]])
-        np.testing.assert_array_equal(self.coefficients.alpha_R, expected)
+        # check the center of the grid (no boundary adjustments)
+        assert self.coefficients.classification[1, 1] == Wind.NE
+        assert self.coefficients.A_0[1, 1] == 2 * 5 + 1 + 1
+        assert self.coefficients.alpha_1[1, 1] == 2 * 6
+        assert self.coefficients.alpha_C[1, 1] == 1 + 1
+        assert self.coefficients.alpha_U[1, 1] == 1
+        assert self.coefficients.alpha_R[1, 1] == 1
+        assert self.coefficients.alpha_D[1, 1] == -1
+        assert self.coefficients.alpha_L[1, 1] == -1
 
-    def test_alpha_D(self):
-        expected = np.array([[3, 3], [3, 3]])
-        np.testing.assert_array_equal(self.coefficients.alpha_D, expected)
+    def test_SE(self):
+        Fx_left = Fx_right = np.full((3, 3), -1)
+        Fy_bottom = Fy_top = np.full((3, 3), 1)
+        E = np.full((3, 3), 6)
+        P = np.full((3, 3), 5)
+        dx = dy = 1
+        self.coefficients = coefficients.Coefficients(Fx_left, Fx_right, Fy_bottom, Fy_top, E, P, dx, dy)
 
-    def test_alpha_L(self):
-        expected = np.array([[1, 1], [1, 1]])
-        np.testing.assert_array_equal(self.coefficients.alpha_L, expected)
+        # check the center of the grid (no boundary adjustments)
+        assert self.coefficients.classification[1, 1] == Wind.SE
+        assert self.coefficients.A_0[1, 1] == 2 * 5 + 1 + 1
+        assert self.coefficients.alpha_1[1, 1] == 2 * 6
+        assert self.coefficients.alpha_C[1, 1] == 1 + 1
+        assert self.coefficients.alpha_U[1, 1] == -1
+        assert self.coefficients.alpha_R[1, 1] == 1
+        assert self.coefficients.alpha_D[1, 1] == 1
+        assert self.coefficients.alpha_L[1, 1] == -1
