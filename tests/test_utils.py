@@ -58,3 +58,29 @@ class Test_unbuffer(unittest.TestCase):
         a = np.arange(9).reshape(3, 3)
         result = utils.unbuffer(a)
         self.assertIsNotNone(result.base)
+
+
+class Test_check_lr_flux(unittest.TestCase):
+    def test_check_lr_flux(self):
+        Fx_left = np.array([[1, 2], [3, 4]])
+        Fx_right = np.array([[3, 4], [5, 6]])
+        utils.check_lr_flux(Fx_left, Fx_right)
+
+    def test_inconsistent_flux(self):
+        Fx_left = np.array([[1, 2], [3, -1]])
+        Fx_right = np.array([[3, 4], [5, 6]])
+        with self.assertRaises(ValueError):
+            utils.check_lr_flux(Fx_left, Fx_right)
+
+
+class Test_check_tb_flux(unittest.TestCase):
+    def test_check_tb_flux(self):
+        Fy_bottom = np.array([[1, 2], [3, 4]])
+        Fy_top = np.array([[2, 5], [4, 6]])
+        utils.check_tb_flux(Fy_top, Fy_bottom)
+
+    def test_inconsistent_flux(self):
+        Fy_bottom = np.array([[1, 2], [3, -1]])
+        Fy_top = np.array([[2, 5], [4, 6]])
+        with self.assertRaises(ValueError):
+            utils.check_tb_flux(Fy_top, Fy_bottom)
