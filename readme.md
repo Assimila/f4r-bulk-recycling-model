@@ -496,6 +496,22 @@ conda env create -f environment.yml
 conda activate f4r-bulk-recycling-model
 ```
 
+### running jupyter notebooks
+
+```bash
+export PYTHONPATH=$(pwd)
+cd notebooks
+jupyter notebook
+```
+
+### using nbstripout
+
+To remove output from Jupyter notebooks, install `nbstripout` as a git filter:
+
+```bash
+nbstripout --install
+```
+
 ## Unit tests
 
 ```bash

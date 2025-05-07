@@ -6,4 +6,9 @@ dependencies:
   - python
   - numpy
   - networkx
+  - notebook
+  - nbstripout
+  - matplotlib
+  - xarray
+  - netCDF4
 prefix: /home/sam/miniconda3/envs/f4r-bulk-recycling-model

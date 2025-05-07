@@ -3,6 +3,8 @@ import unittest
 import numpy as np
 
 from bulk_recycling_model import preprocess
+from bulk_recycling_model.scaling import Scaling, UnitSystem
+from tests.data.load_data import load_data
 
 
 class Test_check_input_array(unittest.TestCase):
@@ -40,12 +42,20 @@ class Test_prepare_E(unittest.TestCase):
         expected = np.array([[2, 3], [5, 6]], dtype=float)
         np.testing.assert_array_almost_equal(preprocess.prepare_E(E), expected)
 
+    def test_real_data(self):
+        E = load_data()["E"]
+        preprocess.prepare_E(E)
+
 
 class Test_prepare_Fx_left(unittest.TestCase):
     def test_ok(self):
         Fx = np.arange(9).reshape(3, 3)
         expected = np.array([[0.5, 1.5], [3.5, 4.5]], dtype=float)
         np.testing.assert_array_almost_equal(preprocess.prepare_Fx_left(Fx), expected)
+
+    def test_real_data(self):
+        Fx = load_data()["Fx"]
+        preprocess.prepare_Fx_left(Fx)
 
 
 class Test_prepare_Fx_right(unittest.TestCase):
@@ -54,6 +64,10 @@ class Test_prepare_Fx_right(unittest.TestCase):
         expected = np.array([[3.5, 4.5], [6.5, 7.5]], dtype=float)
         np.testing.assert_array_almost_equal(preprocess.prepare_Fx_right(Fx), expected)
 
+    def test_real_data(self):
+        Fx = load_data()["Fx"]
+        preprocess.prepare_Fx_right(Fx)
+
 
 class Test_prepare_Fy_bottom(unittest.TestCase):
     def test_ok(self):
@@ -61,12 +75,20 @@ class Test_prepare_Fy_bottom(unittest.TestCase):
         expected = np.array([[1.5, 2.5], [4.5, 5.5]], dtype=float)
         np.testing.assert_array_almost_equal(preprocess.prepare_Fy_bottom(Fy), expected)
 
+    def test_real_data(self):
+        Fy = load_data()["Fy"]
+        preprocess.prepare_Fy_bottom(Fy)
+
 
 class Test_prepare_Fy_top(unittest.TestCase):
     def test_ok(self):
         Fy = np.arange(9).reshape(3, 3)
         expected = np.array([[2.5, 3.5], [5.5, 6.5]], dtype=float)
         np.testing.assert_array_almost_equal(preprocess.prepare_Fy_top(Fy), expected)
+
+    def test_real_data(self):
+        Fy = load_data()["Fy"]
+        preprocess.prepare_Fy_top(Fy)
 
 
 class Test_calculate_precipitation(unittest.TestCase):
@@ -107,3 +129,42 @@ class Test_calculate_precipitation(unittest.TestCase):
             preprocess.calculate_precipitation(Fx_left, Fx_right, Fy_bottom, Fy_top, E, dx, dy),
             expected_precipitation,
         )
+
+    def test_real_data(self):
+        dat = load_data()
+        lon = dat["lon"]
+        lat = dat["lat"]
+
+        L = lon[-1] - lon[0]  # degrees
+        # convert to meters
+        L = L * 111e3 * np.cos(np.deg2rad(lat.mean()))
+
+        dx = L / (len(lon) - 1)  # meters
+
+        H = lat[-1] - lat[0]  # degrees
+        # convert to meters
+        H = H * 111e3
+
+        dy = H / (len(lat) - 1)  # meters
+
+        # get a scaling object to convert from natural to scaled units
+        scaling = Scaling(H)
+
+        dx = scaling.distance.convert(dx, UnitSystem.natural, UnitSystem.scaled)
+        dy = scaling.distance.convert(dy, UnitSystem.natural, UnitSystem.scaled)
+
+        Fx = dat["Fx"]
+        Fx = scaling.water_vapor_flux.convert(Fx, UnitSystem.natural, UnitSystem.scaled)
+        Fx_left = preprocess.prepare_Fx_left(Fx)
+        Fx_right = preprocess.prepare_Fx_right(Fx)
+
+        Fy = dat["Fy"]
+        Fy = scaling.water_vapor_flux.convert(Fy, UnitSystem.natural, UnitSystem.scaled)
+        Fy_bottom = preprocess.prepare_Fy_bottom(Fy)
+        Fy_top = preprocess.prepare_Fy_top(Fy)
+
+        E = dat["E"]
+        E = scaling.evaporation.convert(E, UnitSystem.natural, UnitSystem.scaled)
+        E = preprocess.prepare_E(E)
+
+        _ = preprocess.calculate_precipitation(Fx_left, Fx_right, Fy_bottom, Fy_top, E, dx, dy)
