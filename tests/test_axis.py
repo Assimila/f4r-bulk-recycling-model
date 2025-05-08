@@ -44,3 +44,13 @@ class TestAxis(unittest.TestCase):
             axis.Axis(0, 1.1, 5).secondary_buffered,
             [-0.55, 0.55, 1.65, 2.75, 3.85, 4.95]
         )
+
+    def test_half_step(self):
+        np.testing.assert_allclose(
+            axis.Axis(0, 1, 5).half_step,
+            [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4]
+        )
+        np.testing.assert_allclose(
+            axis.Axis(0, 1.1, 5).half_step,
+            [0, 0.55, 1.1, 1.65, 2.2, 2.75, 3.3, 3.85, 4.4]
+        )

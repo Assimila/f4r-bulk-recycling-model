@@ -45,3 +45,12 @@ class Axis:
         min = self.min - self.step / 2
         n_points = self.n_points + 1
         return np.linspace(min, min + self.step * (n_points - 1), n_points)
+
+    @property
+    def half_step(self) -> np.ndarray:
+        """
+        Returns the half-step axis combining the primary and secondary grids.
+        """
+        n_points = 2 * self.n_points - 1
+        step = self.step / 2
+        return np.linspace(self.min, self.min + step * (n_points - 1), n_points)
