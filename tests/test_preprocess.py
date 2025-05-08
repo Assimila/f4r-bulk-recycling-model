@@ -36,14 +36,15 @@ class Test_check_input_array(unittest.TestCase):
 # 0 3 6
 
 
-class Test_prepare_E(unittest.TestCase):
+class Test_primary_to_secondary(unittest.TestCase):
     def test_ok(self):
-        E = np.arange(9).reshape(3, 3)
+        arr = np.arange(9).reshape(3, 3)
         expected = np.array([[2, 3], [5, 6]], dtype=float)
-        np.testing.assert_array_almost_equal(preprocess.prepare_E(E), expected)
+        np.testing.assert_array_almost_equal(preprocess._primary_to_secondary(arr), expected)
 
     def test_real_data(self):
         E = load_data()["E"]
+        # prepare_E is a wrapper for the function _primary_to_secondary
         preprocess.prepare_E(E)
 
 

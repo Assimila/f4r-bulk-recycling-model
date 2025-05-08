@@ -17,6 +17,33 @@ def _check_input_array(array: np.ndarray) -> None:
         raise ValueError("Input array must not contain NaN values")
 
 
+def _primary_to_secondary(array: np.ndarray) -> np.ndarray:
+    """
+    Convert a 2D array from primary grid to secondary grid.
+    This is the average of the surrounding four points on the primary grid.
+
+    Args:
+        array:
+            (N, M) array on the primary grid.
+            N = number of points in longitude.
+            M = number of points in latitude.
+
+    Returns:
+        (N-1, M-1) array on the secondary grid.
+    """
+    _check_input_array(array)
+
+    return (
+        (
+            array[:-1, :-1]  # (i, j)
+            + array[:-1, 1:]  # (i, j+1)
+            + array[1:, :-1]  # (i+1, j)
+            + array[1:, 1:]  # (i+1, j+1)
+        )
+        / 4
+    )
+
+
 def prepare_E(E: np.ndarray) -> np.ndarray:
     """
     Compute the evaporation on the secondary grid.
@@ -31,20 +58,27 @@ def prepare_E(E: np.ndarray) -> np.ndarray:
     Returns:
         (N-1, M-1) array of evaporation on the secondary grid.
     """
-    _check_input_array(E)
+    return _primary_to_secondary(E)
 
-    # Compute the average of the four points on the primary grid
-    E_secondary = (
-        (
-            E[:-1, :-1]  # (i, j)
-            + E[:-1, 1:]  # (i, j+1)
-            + E[1:, :-1]  # (i+1, j)
-            + E[1:, 1:]  # (i+1, j+1)
-        )
-        / 4
-    )
 
-    return E_secondary
+def prepare_P(P: np.ndarray) -> np.ndarray:
+    """
+    Compute the precipitation on the secondary grid.
+    This is the average of the surrounding four points on the primary grid.
+
+    Not that this is not normally necessary, as precipitation is not used in the model.
+    However, it may be useful to compare input precipitation data with the calculated precipitation data.
+
+    Args:
+        P:
+            (N, M) array of precipitation on the primary grid.
+            N = number of points in longitude.
+            M = number of points in latitude.
+
+    Returns:
+        (N-1, M-1) array of precipitation on the secondary grid.
+    """
+    return _primary_to_secondary(P)
 
 
 def prepare_Fx_left(Fx: np.ndarray) -> np.ndarray:
