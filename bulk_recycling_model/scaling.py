@@ -99,14 +99,13 @@ class DistanceScaling(VariableScaling):
     """
     Scaling for distance.
     
-    - natural units: m
+    - natural units: undefined
     - SI units: m
     - scaled units: scaled to domain length scale
     """
 
     def __init__(self, domain_length_scale: float):
         super().__init__(domain_length_scale)
-        self.add_conversion(UnitSystem.natural, UnitSystem.SI, 1.0)
         self.add_conversion(UnitSystem.SI, UnitSystem.scaled, 1.0 / domain_length_scale)
 
 

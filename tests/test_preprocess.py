@@ -151,8 +151,8 @@ class Test_calculate_precipitation(unittest.TestCase):
         # get a scaling object to convert from natural to scaled units
         scaling = Scaling(H)
 
-        dx = scaling.distance.convert(dx, UnitSystem.natural, UnitSystem.scaled)
-        dy = scaling.distance.convert(dy, UnitSystem.natural, UnitSystem.scaled)
+        dx = scaling.distance.convert(dx, UnitSystem.SI, UnitSystem.scaled)
+        dy = scaling.distance.convert(dy, UnitSystem.SI, UnitSystem.scaled)
 
         Fx = dat["Fx"]
         Fx = scaling.water_vapor_flux.convert(Fx, UnitSystem.natural, UnitSystem.scaled)

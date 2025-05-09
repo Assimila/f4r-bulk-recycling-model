@@ -52,11 +52,10 @@ class TestEPScaling(unittest.TestCase):
 class TestDistanceScaling(unittest.TestCase):
     def test_ok(self):
         obj = scaling.DistanceScaling(domain_length_scale=100.0)
-        # m to m
-        assert obj.convert(1.0, UnitSystem.natural, UnitSystem.SI) == 1.0
+        with self.assertRaises(ValueError):
+            obj.convert(1.0, UnitSystem.natural, UnitSystem.SI)
 
         # m to scaled
-        assert obj.convert(1.0, UnitSystem.natural, UnitSystem.scaled) == 1 / 100
         assert obj.convert(1.0, UnitSystem.SI, UnitSystem.scaled) == 1 / 100
 
 
