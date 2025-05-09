@@ -21,12 +21,19 @@ logger = logging.getLogger(__name__)
 
 class RunStatus(TypedDict):
     success: bool
-    # solution for rho on the secondary grid
+
+    # solution for rho on the secondary grid.
+    # shape (N, M)
+    # N = number of points in longitude.
+    # M = number of points in latitude.
     rho: np.ndarray
+
     # number of iterations
     k: int
+
     # delta per iteration
     deltas: list[float]
+
     # time taken
     time_taken: timedelta
 
@@ -87,9 +94,6 @@ def run(
             The algorithm halts when the absolute difference between iterations (including relaxation) is less than tol.
         callback: A callback function, with arguments (rho, k).
             May be called multiple times per iteration.
-
-    Returns:
-        rho: the auxiliary variable rho, with shape (N, M) on the secondary grid
 
     Raises:
         ValueError: if any of the inputs are not valid
@@ -201,7 +205,8 @@ def run(
 
             logger.debug(f"Iteration {k} of {max_iter}, diagonal {diag}")
 
-            # drop cells outside the model domain - these are updated later.
+            # skip the first and last cell of the diagonal - 
+            # these are in the buffer, outside the model domain, and updated later.
             for i, j in drop_first(drop_last(diagonal(N_buffered, M_buffered, diag))):
                 # ------------------------------------------------------------------------------------------------------
                 # Per cell within the model domain
