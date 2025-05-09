@@ -476,9 +476,9 @@ F^{(x)} = \frac{10^2}{\rho_L g} F^{(x)}_D = 1.02 \times 10^{-2} F^{(x)}_D
 This is not a "big data" problem.
 It should run on a typical laptop without concern for memory or parallelization.
 
-Josie: use numpy, not xarray
-
 ### Numpy indexing
+
+A design constraint was to use numpy internally in preference over xarray.
 
 Standard numpy array indexing has the form `X[i, j]`,
 where `i` is the row index "down" and `j` is the column index "across".
@@ -511,6 +511,26 @@ To remove output from Jupyter notebooks, install `nbstripout` as a git filter:
 ```bash
 nbstripout --install
 ```
+
+## Usage
+
+Example usage can be found in the Jupyter notebooks in the `notebooks` directory.
+
+### Prepare data
+
+Utilities in `bulk_recycling_model.preprocess` and `bulk_recycling_model.scaling`
+facilitate converting input data into the required scaled units,
+and to preprocess evaporation and water vapor flux onto the secondary grid.
+
+### Run the model
+
+The main entry point is `bulk_recycling_model.main.run(...)`.
+
+### Plotting utilities
+
+Utilities in `bulk_recycling_model.plotting` offer some matplotlib functionality.
+Whilst the helper class `bulk_recycling_model.axis.Axis` keeps track of the
+primary and secondary grid coordinates.
 
 ## Unit tests
 

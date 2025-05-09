@@ -31,6 +31,19 @@ class RunStatus(TypedDict):
     time_taken: timedelta
 
 
+def callback(rho: np.ndarray, k: int) -> None:
+    """
+    Noop callback function.
+
+    Args:
+        rho: the auxiliary variable rho, with shape (N, M) on the secondary grid.
+            N = number of points in longitude.
+            M = number of points in latitude.
+        k: the iteration number
+    """
+    pass
+
+
 def run(
     Fx_left: np.ndarray,
     Fx_right: np.ndarray,
@@ -45,7 +58,7 @@ def run(
     R_1: float = 0.2,
     max_iter: int = 1000,
     tol: float = 1e-3,
-    callback: Callable[[np.ndarray, int], None] = lambda rho, k: None,
+    callback: Callable[[np.ndarray, int], None] = callback,
 ) -> RunStatus:
     """
     Solve for the auxiliary variable rho of the bulk recycling model.
