@@ -34,7 +34,8 @@ def pcolormesh(ax: Axes, data: np.ndarray, lon: Axis, lat: Axis, **kwargs) -> Qu
         x = lon.secondary_buffered
         y = lat.secondary_buffered
     else:
-        raise ValueError("Array shape does not match axes")
+        err = f"Array shape {data.shape} does not match axes {lon=} {lat=}"
+        raise ValueError(err)
 
     # use indexing="ij" to account for the [lon, lat] indexing
     X, Y = np.meshgrid(x, y, indexing="ij")

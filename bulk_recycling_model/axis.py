@@ -20,6 +20,9 @@ class Axis:
         self.step = step
         self.n_points = n_points
 
+    def __repr__(self):
+        return f"Axis(min={self.min}, step={self.step}, n_points={self.n_points} on the primary grid)"
+
     @property
     def primary(self) -> np.ndarray:
         """
