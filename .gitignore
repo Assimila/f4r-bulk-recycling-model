@@ -172,3 +172,10 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# big data files
+*.nc
+
+# plots
+*.png
+*.mp4
