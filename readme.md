@@ -522,6 +522,9 @@ Utilities in `bulk_recycling_model.preprocess` and `bulk_recycling_model.scaling
 facilitate converting input data into the required scaled units,
 and to preprocess evaporation and water vapor flux onto the secondary grid.
 
+To calculate the vertical integral of water vapor column fluxes
+we provide a number of methods in `bulk_recycling_model.numerical_integration`.
+
 ### Run the model
 
 The main entry point is `bulk_recycling_model.main.run(...)`.
