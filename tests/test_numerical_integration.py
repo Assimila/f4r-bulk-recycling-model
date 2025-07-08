@@ -16,7 +16,7 @@ class Test_np_trapz_no_extrapolation(unittest.TestCase):
         self.assertAlmostEqual(result, expected)
 
     def test_surface_pressure_not_in_levels(self):
-        integrand = np.array([4, 2, 1, 0])
+        integrand = np.array([np.nan, 2, 1, 0])
         surface_pressure = 990
         pressure_levels = np.array([1000, 900, 800, 100])
         result = numerical_integration.np_trapz_no_extrapolation(integrand, surface_pressure, pressure_levels)
@@ -34,7 +34,7 @@ class Test_np_trapz_with_extrapolation(unittest.TestCase):
         self.assertAlmostEqual(result, expected)
 
     def test_surface_pressure_not_in_levels(self):
-        integrand = np.array([4, 2, 1, 0])
+        integrand = np.array([np.nan, 2, 1, 0])
         surface_pressure = 990
         pressure_levels = np.array([1000, 900, 800, 100])
         result = numerical_integration.np_trapz_with_extrapolation(integrand, surface_pressure, pressure_levels)
@@ -55,7 +55,7 @@ class Test_np_trapz_with_surface_value(unittest.TestCase):
         self.assertAlmostEqual(result, expected)
 
     def test_surface_pressure_not_in_levels(self):
-        integrand = np.array([4, 2, 1, 0])
+        integrand = np.array([np.nan, 2, 1, 0])
         surface_pressure = 990
         surface_value = 3
         pressure_levels = np.array([1000, 900, 800, 100])
@@ -75,11 +75,17 @@ class Test_integrate_no_extrapolation(unittest.TestCase):
         self.assertAlmostEqual(result.item(), expected)
 
     def test_surface_pressure_not_in_levels(self):
-        integrand = xr.DataArray([4, 2, 1, 0], coords={"level": [1000, 900, 800, 100]})
+        integrand = xr.DataArray([np.nan, 2, 1, 0], coords={"level": [1000, 900, 800, 100]})
         surface_pressure = xr.DataArray(990)
         result = numerical_integration.integrate_no_extrapolation(integrand, surface_pressure)
         expected = -1 * (1.5 * 100 + 0.5 * 700)
         self.assertAlmostEqual(result.item(), expected)
+
+    def test_check_finite(self):
+        integrand = xr.DataArray([np.nan, 2, 1, 0], coords={"level": [1000, 900, 800, 100]})
+        surface_pressure = xr.DataArray(1000)
+        with self.assertRaises(ValueError):
+            _ = numerical_integration.integrate_no_extrapolation(integrand, surface_pressure)
 
     def test_with_more_dims(self):
         """
@@ -167,11 +173,17 @@ class Test_integrate_with_extrapolation(unittest.TestCase):
         self.assertAlmostEqual(result.item(), expected)
 
     def test_surface_pressure_not_in_levels(self):
-        integrand = xr.DataArray([4, 2, 1, 0], coords={"level": [1000, 900, 800, 100]})
+        integrand = xr.DataArray([np.nan, 2, 1, 0], coords={"level": [1000, 900, 800, 100]})
         surface_pressure = xr.DataArray(990)
         result = numerical_integration.integrate_with_extrapolation(integrand, surface_pressure)
         expected = -1 * (2 * 90 + 1.5 * 100 + 0.5 * 700)
         self.assertAlmostEqual(result.item(), expected)
+
+    def test_check_finite(self):
+        integrand = xr.DataArray([np.nan, 2, 1, 0], coords={"level": [1000, 900, 800, 100]})
+        surface_pressure = xr.DataArray(1000)
+        with self.assertRaises(ValueError):
+            _ = numerical_integration.integrate_with_extrapolation(integrand, surface_pressure)
 
     def test_with_more_dims(self):
         """
@@ -260,12 +272,19 @@ class Test_integrate_with_surface_value(unittest.TestCase):
         self.assertAlmostEqual(result.item(), expected)
 
     def test_surface_pressure_not_in_levels(self):
-        integrand = xr.DataArray([4, 2, 1, 0], coords={"level": [1000, 900, 800, 100]})
+        integrand = xr.DataArray([np.nan, 2, 1, 0], coords={"level": [1000, 900, 800, 100]})
         surface_pressure = xr.DataArray(990)
         surface_value = xr.DataArray(3)
         result = numerical_integration.integrate_with_surface_value(integrand, surface_pressure, surface_value)
         expected = -1 * (2.5 * 90 + 1.5 * 100 + 0.5 * 700)
         self.assertAlmostEqual(result.item(), expected)
+
+    def test_check_finite(self):
+        integrand = xr.DataArray([np.nan, 2, 1, 0], coords={"level": [1000, 900, 800, 100]})
+        surface_pressure = xr.DataArray(1000)
+        surface_value = xr.DataArray(4)
+        with self.assertRaises(ValueError):
+            _ = numerical_integration.integrate_with_surface_value(integrand, surface_pressure, surface_value)
 
     def test_with_more_dims(self):
         """

@@ -19,15 +19,13 @@ import numpy as np
 import xarray as xr
 
 
-def np_trapz_no_extrapolation(
-    integrand: np.ndarray, surface_pressure: float, pressure_levels: np.ndarray
-) -> float:
+def np_trapz_no_extrapolation(integrand: np.ndarray, surface_pressure: float, pressure_levels: np.ndarray) -> float:
     """
     Integrate from surface pressure to top of atmosphere without extrapolation.
 
     This function is suitable for use with xarray `apply_ufunc`.
 
-    Simply truncates the integrand to discard values below the surface pressure.
+    Simply truncates the integrand to discard pressure levels greater than surface pressure (ie. below surface level).
 
     Args:
         integrand: 1-dimensional array of values (observations) to integrate.
@@ -55,15 +53,13 @@ def np_trapz_no_extrapolation(
     return result
 
 
-def np_trapz_with_extrapolation(
-    integrand: np.ndarray, surface_pressure: float, pressure_levels: np.ndarray
-) -> float:
+def np_trapz_with_extrapolation(integrand: np.ndarray, surface_pressure: float, pressure_levels: np.ndarray) -> float:
     """
     Integrate from surface pressure to top of atmosphere with extrapolation.
 
     This function is suitable for use with xarray `apply_ufunc`.
 
-    Truncates the integrand to discard values below the surface pressure.
+    Truncates the integrand to discard pressure levels greater than surface pressure (ie. below surface level).
     Creates a point at the surface pressure,
     using the value of the integrand at the lowest pressure level above the surface pressure.
 
@@ -105,7 +101,7 @@ def np_trapz_with_surface_value(
 
     This function is suitable for use with xarray `apply_ufunc`.
 
-    Truncates the integrand to discard values below the surface pressure.
+    Truncates the integrand to discard pressure levels greater than surface pressure (ie. below surface level).
     Creates a point at the surface pressure, using the provided surface_value.
 
     Args:
@@ -142,11 +138,12 @@ def integrate_no_extrapolation(
     gridded_data: xr.DataArray,
     surface_pressure: xr.DataArray,
     pressure_levels_dim: str = "level",
+    check_finite: bool = True,
 ) -> xr.DataArray:
     """
     Integrate gridded data from surface pressure to top of atmosphere without extrapolation.
 
-    Simply truncates the integrand to discard values below the surface pressure.
+    Simply truncates the integrand to discard pressure levels greater than surface pressure (ie. below surface level).
 
     Args:
         gridded_data: The integrand.
@@ -155,6 +152,7 @@ def integrate_no_extrapolation(
         surface_pressure: Surface pressure (lower bound of the integral).
             A DataArray with the same dimensions as `gridded_data` excluding `pressure_levels_dim`.
         pressure_levels_dim: The name of the dimension in gridded_data that represents pressure levels.
+        check_finite: If True, checks that the result of the integration is finite.
 
     Returns:
         A DataArray with the same dimensions as `gridded_data` excluding `pressure_levels_dim`.
@@ -170,7 +168,7 @@ def integrate_no_extrapolation(
     if surface_pressure_dims != broadcast_dims:
         raise ValueError(f"surface_pressure has dimensions {surface_pressure_dims}, expected {broadcast_dims}")
 
-    return xr.apply_ufunc(
+    da = xr.apply_ufunc(
         np_trapz_no_extrapolation,
         gridded_data,
         surface_pressure,
@@ -182,16 +180,23 @@ def integrate_no_extrapolation(
         },
     )
 
+    if check_finite:
+        if not xr.ufuncs.isfinite(da).all():
+            raise ValueError("Integration result is not finite")
+        
+    return da
+
 
 def integrate_with_extrapolation(
     gridded_data: xr.DataArray,
     surface_pressure: xr.DataArray,
     pressure_levels_dim: str = "level",
+    check_finite: bool = True,
 ) -> xr.DataArray:
     """
     Integrate gridded data from surface pressure to top of atmosphere with extrapolation.
 
-    Truncates the integrand to discard values below the surface pressure.
+    Truncates the integrand to discard pressure levels greater than surface pressure (ie. below surface level).
     Creates a point at the surface pressure,
     using the value of the integrand at the lowest pressure level above the surface pressure.
 
@@ -202,6 +207,7 @@ def integrate_with_extrapolation(
         surface_pressure: Surface pressure (lower bound of the integral).
             A DataArray with the same dimensions as `gridded_data` excluding `pressure_levels_dim`.
         pressure_levels_dim: The name of the dimension in gridded_data that represents pressure levels.
+        check_finite: If True, checks that the result of the integration is finite.
 
     Returns:
         A DataArray with the same dimensions as `gridded_data` excluding `pressure_levels_dim`.
@@ -217,7 +223,7 @@ def integrate_with_extrapolation(
     if surface_pressure_dims != broadcast_dims:
         raise ValueError(f"surface_pressure has dimensions {surface_pressure_dims}, expected {broadcast_dims}")
 
-    return xr.apply_ufunc(
+    da = xr.apply_ufunc(
         np_trapz_with_extrapolation,
         gridded_data,
         surface_pressure,
@@ -229,17 +235,24 @@ def integrate_with_extrapolation(
         },
     )
 
+    if check_finite:
+        if not xr.ufuncs.isfinite(da).all():
+            raise ValueError("Integration result is not finite")
+        
+    return da
+
 
 def integrate_with_surface_value(
     gridded_data: xr.DataArray,
     surface_pressure: xr.DataArray,
     surface_value: xr.DataArray,
     pressure_levels_dim: str = "level",
+    check_finite: bool = True,
 ) -> xr.DataArray:
     """
     Integrate gridded data from surface pressure to top of atmosphere with extrapolation.
 
-    Truncates the integrand to discard values below the surface pressure.
+    Truncates the integrand to discard pressure levels greater than surface pressure (ie. below surface level).
     Creates a point at the surface pressure, using the provided surface_value.
 
     Args:
@@ -251,6 +264,7 @@ def integrate_with_surface_value(
         surface_value: Value of the integrand at the surface pressure.
             A DataArray with the same dimensions as `gridded_data` excluding `pressure_levels_dim`.
         pressure_levels_dim: The name of the dimension in gridded_data that represents pressure levels.
+        check_finite: If True, checks that the result of the integration is finite.
 
     Returns:
         A DataArray with the same dimensions as `gridded_data` excluding `pressure_levels_dim`.
@@ -269,7 +283,7 @@ def integrate_with_surface_value(
     if surface_value_dims != broadcast_dims:
         raise ValueError(f"surface_value has dimensions {surface_value_dims}, expected {broadcast_dims}")
 
-    return xr.apply_ufunc(
+    da = xr.apply_ufunc(
         np_trapz_with_surface_value,
         gridded_data,
         surface_pressure,
@@ -281,3 +295,9 @@ def integrate_with_surface_value(
             "pressure_levels": gridded_data.coords[pressure_levels_dim].values,
         },
     )
+
+    if check_finite:
+        if not xr.ufuncs.isfinite(da).all():
+            raise ValueError("Integration result is not finite")
+
+    return da
