@@ -8,7 +8,7 @@ import scipy
 import sys 
 
 # %%
-def latlonlev(dataset_list,latmax,latmin,lonmax,lonmin,pmin,pmax,deg):
+def latlonlev(dataset_list,year1,year2,latmax,latmin,lonmax,lonmin,pmin,pmax,deg):
     """
     Normalize all the dimensions of datasets to merge into one dataset
     
@@ -21,7 +21,7 @@ def latlonlev(dataset_list,latmax,latmin,lonmax,lonmin,pmin,pmax,deg):
     dataset_out = []
     for d in dataset_list:
 
-        d = d.sel(time=slice("1980-01-01", "2005-12-31"),drop=True)
+        d = d.sel(time=slice(str(year1)+"-01-01", str(year2)+"-12-31"),drop=True)
 
         # make sure lat runs from south to north
         if not d["lat"].to_index().is_monotonic_increasing:
@@ -67,7 +67,7 @@ ds_uwnd  = xr.open_dataset("/Users/ellendyer/Library/Mobile Documents/com~apple~
 ds_vwnd = xr.open_dataset("/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/3_ESA_GRANT/MODEL/data/ncep_test/vwnd.mon.mean.nc")
 ds_list_in = [ds_prate.rename({"prate": "Prec"}), ds_pres.rename({"pres": "Psfc"}), ds_lhtfl.rename({"lhtfl": "Evap"}), 
                ds_shum.rename({"shum": "Shum"}), ds_uwnd.rename({"uwnd": "Uwnd"}), ds_vwnd.rename({"vwnd": "Vwnd"})] 
-ds_list_out = latlonlev(ds_list_in,latmin=-10,latmax=10,lonmin=11,lonmax=31,pmax=1013,pmin=300,deg=2.5)
+ds_list_out = latlonlev(ds_list_in,year1=1968,year2=2000,latmin=-10,latmax=10,lonmin=11,lonmax=31,pmax=1050,pmin=300,deg=2.5)
 ds = xr.merge(ds_list_out) 
 print('datasets merged')
 
@@ -76,7 +76,7 @@ print('datasets merged')
 # %%
 # grab the first time step
 #ds = ds.sel(time='1990-04-01', drop=True)
-ds = ds.sel(time=slice('1990-01-01','1990-12-31'), drop=True)
+ds = ds.sel(time=slice('1968-01-01','2001-12-31'), drop=True)
 print(ds)
 
 # %%
@@ -114,8 +114,7 @@ def surf_ext(ps,data):
 
 # %%
 print('prepping datasets near surface for recycling')
-<<<<<<< Updated upstream
-from bulk_recycling_model import numerical_integration
+import bulk_recycling_model.numerical_integration
 
 # Integrate 10^-3 Shum Uwnd dp
 # Because the integration limits are from high pressure to low pressure, we need to invert the sign.
@@ -127,22 +126,6 @@ Fx = bulk_recycling_model.numerical_integration.integrate_no_extrapolation(integ
 # Because the integration limits are from high pressure to low pressure, we need to invert the sign.
 integrand = -1 * 1e-3 * ds["Shum"] * ds["Vwnd"]
 Fy = bulk_recycling_model.numerical_integration.integrate_no_extrapolation(integrand, ds["Psfc"])
-=======
-# Integrate 10^-3 Shum Uwnd dp
-# The input dataset has NaNs where pressure levels correspond to heights below ground level.
-# Because the integration limits are from high pressure to low pressure, we need to invert the sign.
-da = -1 * 1e-3 * ds["Shum"] * ds["Uwnd"]
-da = surf_ext(ds["Psfc"],da)
-Fx = da.reduce(integrator, dim="level", x=ds.coords["level"].values)
-# Units: mb x m/s
-
-# %%
-# Integrate 10^-3 Shum Vwnd dp
-# The input dataset has NaNs where pressure levels correspond to heights below ground level.
-# Because the integration limits are from high pressure to low pressure, we need to invert the sign.
-da = -1 * 1e-3 * ds["Shum"] * ds["Vwnd"]
-Fy = da.reduce(integrator, dim="level", x=ds.coords["level"].values)
->>>>>>> Stashed changes
 # Units: mb x m/s
 
 # %% [markdown]
@@ -286,22 +269,28 @@ for i,time in enumerate(ds.time):
     # plot each timestep 
     
     rho = status["rho"]
+    print(rho)
+    print(lat_axis.min)
+    print(lat_axis)
+    print(lon_axis.min)
+    print(lon_axis)
+    sys.exit()
     fig, ax = plt.subplots()
     collection = plotting.pcolormesh(ax, rho, lon_axis, lat_axis, vmin=0.0, vmax=0.8)
     fig.colorbar(collection)
     fig.suptitle(str(time.values)+" $\\rho$")
     plt.savefig(f"/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/3_ESA_GRANT/MODEL/plots/ncep/rho_"+str(time.values)+".png")
-    plt.show()
+    #plt.show()
     
-    # %%
-    # plot the convergence
-    deltas = status["deltas"]
-    fig, ax = plt.subplots()
-    ax.plot(deltas)
-    ax.set_title("Convergence")
-    ax.set_xlabel("Iteration")
-    plt.show()
-    # %%
+#    # %%
+#    # plot the convergence
+#    deltas = status["deltas"]
+#    fig, ax = plt.subplots()
+#    ax.plot(deltas)
+#    ax.set_title("Convergence")
+#    ax.set_xlabel("Iteration")
+#    plt.show()
+#    # %%
     
     
     
