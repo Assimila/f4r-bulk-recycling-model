@@ -274,13 +274,13 @@ def run(
         # Finished step
         # --------------------------------------------------------------------------------------------------------------
 
-        logger.info(
-            f"Iteration {k} of {max_iter}. Finished in {(datetime.now(UTC) - step_start).total_seconds()} seconds"
-        )
+        #logger.info(
+        #    f"Iteration {k} of {max_iter}. Finished in {(datetime.now(UTC) - step_start).total_seconds()} seconds"
+        #)
 
         delta = np.abs(unbuffer(rho_next) - unbuffer(rho)).max()
         deltas.append(delta)
-        logger.info(f"Iteration {k} of {max_iter}. delta = {delta}")
+        #logger.info(f"Iteration {k} of {max_iter}. delta = {delta}")
 
         if delta < tol:
             time_taken = datetime.now(UTC) - iter_start
