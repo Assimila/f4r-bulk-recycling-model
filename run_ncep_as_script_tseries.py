@@ -67,6 +67,7 @@ def latlonlev(dataset_list,year1,year2,latmax,latmin,lonmax,lonmin,pmin,pmax,deg
 dataf ="/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/3_ESA_GRANT/MODEL/data/ncep_test/" 
 datao ="/Users/ellendyer/Desktop/" 
 datap ="/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/3_ESA_GRANT/MODEL/plots/ncep/"
+#For selection and plotting
 year1 = 1968
 year2 = 2000
 #Converting prate from kg/m2/s > mm/day
