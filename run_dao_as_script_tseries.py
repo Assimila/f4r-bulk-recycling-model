@@ -8,82 +8,52 @@ import scipy
 import sys 
 
 # %%
-def latlonlev(dataset_list,year1,year2,latmax,latmin,lonmax,lonmin,pmin,pmax,deg):
+def latlonlev(ds,latmax,latmin,lonmax,lonmin):
     """
     Normalize all the dimensions of datasets to merge into one dataset
     
     Arguments:
-        dataset_list: a list of datasets with one variable each
+        dataset and regional box
 
     Returns:
-       list of datasets 
+       dataset 
     """
-    dataset_out = []
-    for d in dataset_list:
 
-        d = d.sel(time=slice(str(year1)+"-01-01", str(year2)+"-12-31"),drop=True)
+    if ds.coords["level"].isnull().all():
+        print("Fixing broken pressure level data")
+        levels = [1000.0, 950.0, 900.0, 850.0, 700.0, 500.0, 300.0, 200.0]
+        ds.coords["level"] = xr.DataArray(levels, dims=["level"], coords={"level": levels}, attrs={"units": "hPa"})
+    print(ds.coords['level'])
+    
+    # make sure lat runs from south to north
+    if not ds["lat"].to_index().is_monotonic_increasing:
+        print("flipping lat")
+        ds = ds.sortby("lat", ascending=True)
 
-        # make sure lat runs from south to north
-        if not d["lat"].to_index().is_monotonic_increasing:
-            print(d.data_vars," flipping lat")
-            d = d.sortby("lat", ascending=True)
-        d = d.sel(lat=slice(latmin, latmax))
-        d = d.interp(lat=np.arange(latmin, latmax, deg),method='linear',kwargs={"fill_value": "extrapolate"})
+    # make sure lon runs from west to east
+    if not ds["lon"].to_index().is_monotonic_increasing:
+        print("flipping lon")
+        ds = ds.sortby("lon", ascending=True)
+
+    # get a spatial subset 
+    ds = ds.sel(lat=slice(latmin, latmax), lon=slice(lonmin, lonmax))
+
+    # make sure that the order of the dimensions is (lon, lat, ...) for all variables
+    ds = ds.transpose("lon", "lat", "level", "time",missing_dims='ignore')
+    ds = ds.isel(time=slice(50,100), drop=True)
+    print(ds)
+    #sys.exit()
         
-        # make sure lon runs from west to east
-        if not d["lon"].to_index().is_monotonic_increasing:
-            print(d.data_vars," flipping lon")
-            d = d.sortby("lon", ascending=True)
-        # Convert from 0-360 longitudes
-        if d["lon"].max() > 185.:
-           print(d.data_vars,"  shifting lon")
-           d.coords['lon'] = (d.coords['lon'] + 180) % 360 - 180
-           d = d.sortby(d.lon)
-        d = d.sel(lon=slice(lonmin, lonmax))
-        d = d.interp(lon=np.arange(lonmin, lonmax, deg),method='linear',kwargs={"fill_value": "extrapolate"})
-
-        try:
-            if d["level"].to_index().is_monotonic_increasing:
-                d = d.sortby("level", ascending=False)
-                print(d.data_vars,"  sorting pressure levels")
-            levs = [1000.0, 925.0,850.0,700.0,600.0,500.0,400.0,300.0]
-            print(d.data_vars,"  selecting pressure levels")
-            d = d.sel(level=d.level.isin(levs))
-            print(d.level.values)
-            d = d.sel(level=slice(pmax, pmin))
-        except:
-           print(d.data_vars," passing pressure loop") 
-
-        # make sure that the order of the dimensions is (lon, lat, ...) for all variables
-        d = d.transpose("lon", "lat", "level", "time",missing_dims='ignore')
-        
-        dataset_out.append(d)
-        
-    return dataset_out
+    return ds
              
-          
-
 # %%
-dataf ="/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/3_ESA_GRANT/MODEL/data/ncep_test/" 
 datao ="/Users/ellendyer/Desktop/" 
-datap ="/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/3_ESA_GRANT/MODEL/plots/ncep/"
+datap ="/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/3_ESA_GRANT/MODEL/plots/dao/"
 #For selection and plotting
-year1 = 1968
-year2 = 2000
-#Converting prate from kg/m2/s > mm/day
-ds_prate = (86400.0)*xr.open_dataset(dataf+"prate.mon.mean.nc")
-ds_pres = xr.open_dataset(dataf+"pres.mon.mean.nc")
-#Converting latent heat flux in W/m2 > mm/day
-ds_lhtfl = (86400/2.5e6)*xr.open_dataset(dataf+"lhtfl.mon.mean.nc")
-ds_shum = xr.open_dataset(dataf+"shum.mon.mean.nc")
-ds_uwnd  = xr.open_dataset(dataf+"uwnd.mon.mean.nc")
-ds_vwnd = xr.open_dataset(dataf+"vwnd.mon.mean.nc")
-ds_list_in = [ds_prate.rename({"prate": "Prec"}), ds_pres.rename({"pres": "Psfc"}), ds_lhtfl.rename({"lhtfl": "Evap"}), 
-               ds_shum.rename({"shum": "Shum"}), ds_uwnd.rename({"uwnd": "Uwnd"}), ds_vwnd.rename({"vwnd": "Vwnd"})] 
-ds_list_out = latlonlev(ds_list_in,year1=year1,year2=year2,latmin=-10,latmax=6,lonmin=11,lonmax=31,pmax=1000,pmin=300,deg=2.5)
-ds = xr.merge(ds_list_out) 
-print('datasets merged')
-ds.to_netcdf(datao+"ncepds.nc")
+
+ds = xr.open_dataset("/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/3_ESA_GRANT/MODEL/data/dao.80_93.nc")
+ds = latlonlev(ds,latmin=-10,latmax=10,lonmin=11,lonmax=31)
+ds.to_netcdf(datao+"daods.nc")
 
 # %%
 print('prepping datasets near surface for recycling')
