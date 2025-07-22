@@ -76,3 +76,23 @@ class Test_run(unittest.TestCase):
         assert status["success"]
         assert status["k"] > 0
         assert len(status["deltas"]) == status["k"]
+
+    def test_max_iter(self):
+        """
+        does not converge
+        """
+        status = run(
+            self.Fx_left,
+            self.Fx_right,
+            self.Fy_bottom,
+            self.Fy_top,
+            self.E,
+            self.P,
+            self.dx,
+            self.dy,
+            tol=1e-2,
+            max_iter=1,  # force early exit
+        )
+        assert not status["success"]
+        assert status["k"] == 1
+        assert len(status["deltas"]) == 1

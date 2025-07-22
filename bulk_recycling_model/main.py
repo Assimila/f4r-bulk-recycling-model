@@ -167,11 +167,14 @@ def run(
     # keep track of the delta change per iteration
     deltas = []
 
+    # loop variables
+    k = 0
+    iter_start = datetime.now(UTC)
+    time_taken = timedelta(0)
+
     # ------------------------------------------------------------------------------------------------------------------
     # Iterate
     # ------------------------------------------------------------------------------------------------------------------
-
-    iter_start = datetime.now(UTC)
 
     for k in range(1, max_iter + 1):
         # --------------------------------------------------------------------------------------------------------------
@@ -302,4 +305,10 @@ def run(
 
     logger.warning(f"Did not converge in {max_iter} iterations")
 
-    raise RuntimeError(f"Did not converge in {max_iter} iterations")
+    return RunStatus(
+        success=False,
+        rho=unbuffer(rho),
+        k=k,
+        deltas=deltas,
+        time_taken=time_taken,
+    )
