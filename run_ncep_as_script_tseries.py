@@ -80,7 +80,7 @@ ds_uwnd  = xr.open_dataset(dataf+"uwnd.mon.mean.nc")
 ds_vwnd = xr.open_dataset(dataf+"vwnd.mon.mean.nc")
 ds_list_in = [ds_prate.rename({"prate": "Prec"}), ds_pres.rename({"pres": "Psfc"}), ds_lhtfl.rename({"lhtfl": "Evap"}), 
                ds_shum.rename({"shum": "Shum"}), ds_uwnd.rename({"uwnd": "Uwnd"}), ds_vwnd.rename({"vwnd": "Vwnd"})] 
-ds_list_out = latlonlev(ds_list_in,year1=year1,year2=year2,latmin=-10,latmax=6,lonmin=11,lonmax=31,pmax=1000,pmin=300,deg=2.5)
+ds_list_out = latlonlev(ds_list_in,year1=year1,year2=year2,latmin=-10,latmax=10,lonmin=11,lonmax=31,pmax=1000,pmin=300,deg=2.5)
 ds = xr.merge(ds_list_out) 
 print('datasets merged')
 ds.to_netcdf(datao+"ncepds.nc")
@@ -92,13 +92,13 @@ import bulk_recycling_model.numerical_integration
 # Integrate 10^-3 Shum Uwnd dp
 # Because the integration limits are from high pressure to low pressure, we need to invert the sign.
 integrand = -1 * 1e-3 * ds["Shum"] * ds["Uwnd"]
-Fx = bulk_recycling_model.numerical_integration.integrate_with_extrapolation(integrand, ds["Psfc"])
+Fx = bulk_recycling_model.numerical_integration.integrate_no_extrapolation(integrand, ds["Psfc"])
 # Units: mb x m/s
 
 # Integrate 10^-3 Shum Vwnd dp
 # Because the integration limits are from high pressure to low pressure, we need to invert the sign.
 integrand = -1 * 1e-3 * ds["Shum"] * ds["Vwnd"]
-Fy = bulk_recycling_model.numerical_integration.integrate_with_extrapolation(integrand, ds["Psfc"])
+Fy = bulk_recycling_model.numerical_integration.integrate_no_extrapolation(integrand, ds["Psfc"])
 # Units: mb x m/s
 
 # %% [markdown]
