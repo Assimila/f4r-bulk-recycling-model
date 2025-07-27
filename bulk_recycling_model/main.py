@@ -302,4 +302,12 @@ def run(
 
     logger.warning(f"Did not converge in {max_iter} iterations")
 
-    raise RuntimeError(f"Did not converge in {max_iter} iterations")
+    #raise RuntimeError(f"Did not converge in {max_iter} iterations")
+
+    return RunStatus(
+        success=False,
+        rho=unbuffer(rho),
+        k=k,
+        deltas=deltas,
+        time_taken=time_taken,
+    )
