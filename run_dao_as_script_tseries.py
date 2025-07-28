@@ -40,7 +40,8 @@ def latlonlev(ds,latmax,latmin,lonmax,lonmin):
 
     # make sure that the order of the dimensions is (lon, lat, ...) for all variables
     ds = ds.transpose("lon", "lat", "level", "time",missing_dims='ignore')
-    ds = ds.isel(time=slice(50,100), drop=True)
+    ds = ds.isel(time=slice(0,60), drop=True)
+    #ds = ds.isel(time=60, drop=True)
     print(ds)
     #sys.exit()
         
@@ -52,7 +53,7 @@ datap ="/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WO
 #For selection and plotting
 
 ds = xr.open_dataset("/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/3_ESA_GRANT/MODEL/data/dao.80_93.nc")
-ds = latlonlev(ds,latmin=-10,latmax=10,lonmin=11,lonmax=31)
+ds = latlonlev(ds,latmin=-6,latmax=6,lonmin=11,lonmax=31)
 ds.to_netcdf(datao+"daods.nc")
 
 # %%
@@ -62,6 +63,12 @@ import bulk_recycling_model.numerical_integration
 # Integrate 10^-3 Shum Uwnd dp
 # Because the integration limits are from high pressure to low pressure, we need to invert the sign.
 integrand = -1 * 1e-3 * ds["Shum"] * ds["Uwnd"]
+if not xr.ufuncs.isfinite(ds["Shum"]).all():
+    print("Shum not finite")
+if not xr.ufuncs.isfinite(ds["Uwnd"]).all():
+    print("Uwnd not finite")
+if not xr.ufuncs.isfinite(ds["Psfc"]).all():
+    print("Psfc not finite")
 Fx = bulk_recycling_model.numerical_integration.integrate_with_extrapolation(integrand, ds["Psfc"])
 # Units: mb x m/s
 
@@ -206,6 +213,16 @@ for i,time in enumerate(ds.time):
         tol=1e-3,
         #callback=Callback(),
     )
+    if status["success"]==False:
+        # plot the convergence
+        deltas = status["deltas"]
+        fig, ax = plt.subplots()
+        ax.plot(deltas)
+        ax.set_title("Convergence")
+        ax.set_xlabel("Iteration")
+        plt.show()
+        #plt.close()
+        sys.exit()   
     assert status["success"]
     print(i,time.values)
     rho_ar[:,:,i] = status["rho"]
@@ -252,8 +269,9 @@ rho_xarr = xr.DataArray(
 ) 
 rho_xarr = rho_xarr.transpose("time","lat","lon")
 print(rho_xarr)
-rho_xarr.to_netcdf(datao+"rho_ncep.nc")
+rho_xarr.to_netcdf(datao+"rho_dao.nc")
 
+sys.exit()
 mam_rho = rho_xarr.sel(time=rho_xarr.time.dt.month.isin([3,4,5]))
 print(mam_rho)    
 fig, ax = plt.subplots()

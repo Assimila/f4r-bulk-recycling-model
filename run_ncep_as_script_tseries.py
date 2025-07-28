@@ -236,6 +236,16 @@ for i,time in enumerate(ds.time):
         tol=1e-3,
         #callback=Callback(),
     )
+    if status["success"]==False:
+        # plot the convergence
+        deltas = status["deltas"]
+        fig, ax = plt.subplots()
+        ax.plot(deltas)
+        ax.set_title("Convergence")
+        ax.set_xlabel("Iteration")
+        plt.show()
+        #plt.close()
+        sys.exit()   
     assert status["success"]
     print(i,time.values)
     rho_ar[:,:,i] = status["rho"]
