@@ -169,3 +169,20 @@ class Test_calculate_precipitation(unittest.TestCase):
         E = preprocess.prepare_E(E)
 
         _ = preprocess.calculate_precipitation(Fx_left, Fx_right, Fy_bottom, Fy_top, E, dx, dy)
+
+
+class Test_fix_negative_precipitation(unittest.TestCase):
+    def test_positive_precipitation(self):
+        P = np.array([[1, 2], [3, 4]])
+        expected = P.copy()
+        np.testing.assert_array_almost_equal(preprocess.fix_negative_precipitation(P), expected)
+
+    def test_negative_precipitation(self):
+        P = np.array([[1, -2], [-3, 4]])
+        expected = np.array([[1, 0], [0, 4]])
+        np.testing.assert_array_almost_equal(preprocess.fix_negative_precipitation(P), expected)
+
+    def test_zero_precipitation(self):
+        P = np.array([[0, 0], [0, 0]])
+        expected = P.copy()
+        np.testing.assert_array_almost_equal(preprocess.fix_negative_precipitation(P), expected)

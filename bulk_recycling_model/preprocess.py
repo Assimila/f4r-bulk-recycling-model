@@ -81,6 +81,25 @@ def prepare_P(P: np.ndarray) -> np.ndarray:
     return _primary_to_secondary(P)
 
 
+def fix_negative_precipitation(P: np.ndarray) -> np.ndarray:
+    """
+    Fix negative precipitation values by setting them to zero.
+
+    This is not a step that is prescribed by Burde et al. (2006).
+
+    However, it has been noted that after solving for precipitation
+    from evaporation and water vapour fluxes,
+    using the equation of state,
+    the resulting precipitation values can be negative.
+
+    This function sets all negative precipitation values to zero,
+    imposing a physical constraint that precipitation cannot be negative.
+    However, it will break the equality of the equation of state,
+    so it should be used with caution.
+    """
+    return np.maximum(P, 0)
+
+
 def prepare_Fx_left(Fx: np.ndarray) -> np.ndarray:
     """
     Compute the longitudinal water vapour flux on the left hand side of each cell on the secondary grid.
