@@ -1,89 +1,23 @@
 # %% [markdown]
-# Extract data from a NCEP NetCDF files
+# Extract data from a ERA5 NetCDF files
 
 # %%
 import numpy as np
 import xarray as xr
+import pandas as pd
 import scipy
 import sys 
+import warnings
+warnings.filterwarnings('ignore')
+import time
+start = time.time()
 
 # %%
-def latlonlev(dataset_list,year1,year2,latmax,latmin,lonmax,lonmin,pmin,pmax,deg):
-    """
-    Normalize all the dimensions of datasets to merge into one dataset
-    
-    Arguments:
-        dataset_list: a list of datasets with one variable each
-
-    Returns:
-       list of datasets 
-    """
-    dataset_out = []
-    for d in dataset_list:
-
-        d = d.sel(time=slice(str(year1)+"-01-01", str(year2)+"-12-31"),drop=True)
-
-        # make sure lat runs from south to north
-        if not d["lat"].to_index().is_monotonic_increasing:
-            print(d.data_vars," flipping lat")
-            d = d.sortby("lat", ascending=True)
-        d = d.sel(lat=slice(latmin, latmax))
-        d = d.interp(lat=np.arange(latmin, latmax, deg),method='linear',kwargs={"fill_value": "extrapolate"})
-        
-        # make sure lon runs from west to east
-        if not d["lon"].to_index().is_monotonic_increasing:
-            print(d.data_vars," flipping lon")
-            d = d.sortby("lon", ascending=True)
-        # Convert from 0-360 longitudes
-        if d["lon"].max() > 185.:
-           print(d.data_vars,"  shifting lon")
-           d.coords['lon'] = (d.coords['lon'] + 180) % 360 - 180
-           d = d.sortby(d.lon)
-        d = d.sel(lon=slice(lonmin, lonmax))
-        d = d.interp(lon=np.arange(lonmin, lonmax, deg),method='linear',kwargs={"fill_value": "extrapolate"})
-
-        try:
-            if d["level"].to_index().is_monotonic_increasing:
-                d = d.sortby("level", ascending=False)
-                print(d.data_vars,"  sorting pressure levels")
-            levs = [1000.0, 925.0,850.0,700.0,600.0,500.0,400.0,300.0]
-            print(d.data_vars,"  selecting pressure levels")
-            d = d.sel(level=d.level.isin(levs))
-            print(d.level.values)
-            d = d.sel(level=slice(pmax, pmin))
-        except:
-           print(d.data_vars," passing pressure loop") 
-
-        # make sure that the order of the dimensions is (lon, lat, ...) for all variables
-        d = d.transpose("lon", "lat", "level", "time",missing_dims='ignore')
-        
-        dataset_out.append(d)
-        
-    return dataset_out
-             
-          
-
-# %%
-dataf ="/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/3_ESA_GRANT/MODEL/data/ncep_test/" 
-datao ="/Users/ellendyer/Desktop/" 
-datap ="/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/3_ESA_GRANT/MODEL/plots/ncep/"
-#For selection and plotting
-year1 = 1980
-year2 = 2000
-#Converting prate from kg/m2/s > mm/day
-ds_prate = (86400.0)*xr.open_dataset(dataf+"prate.mon.mean.nc")
-ds_pres = xr.open_dataset(dataf+"pres.mon.mean.nc")
-#Converting latent heat flux in W/m2 > mm/day
-ds_lhtfl = (86400/2.5e6)*xr.open_dataset(dataf+"lhtfl.mon.mean.nc")
-ds_shum = xr.open_dataset(dataf+"shum.mon.mean.nc")
-ds_uwnd  = xr.open_dataset(dataf+"uwnd.mon.mean.nc")
-ds_vwnd = xr.open_dataset(dataf+"vwnd.mon.mean.nc")
-ds_list_in = [ds_prate.rename({"prate": "Prec"}), ds_pres.rename({"pres": "Psfc"}), ds_lhtfl.rename({"lhtfl": "Evap"}), 
-               ds_shum.rename({"shum": "Shum"}), ds_uwnd.rename({"uwnd": "Uwnd"}), ds_vwnd.rename({"vwnd": "Vwnd"})] 
-ds_list_out = latlonlev(ds_list_in,year1=year1,year2=year2,latmin=-10,latmax=5,lonmin=15,lonmax=30,pmax=1000,pmin=300,deg=2.5)
-ds = xr.merge(ds_list_out) 
-print('datasets merged')
-ds.to_netcdf(datao+"ncepds.nc")
+dataf ="/Volumes/ESA_F4R/era/" 
+datao ="/Volumes/ESA_F4R/ed_prepare/" 
+#datao ="/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/3_ESA_GRANT/MODEL/data/era/" 
+datap ="/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/3_ESA_GRANT/MODEL/plots/era/"
+ds = xr.open_mfdataset(datao+"erads.nc").load()
 
 # %%
 print('prepping datasets near surface for recycling')
@@ -302,14 +236,14 @@ rho_xarr = rho_xarr.transpose("time","lat","lon")
 #print(rho_xarr.max())
 #print(rho_xarr.min())
 #print(rho_xarr.where(rho_xarr.values>1.0).count())
-rho_xarr.to_netcdf(datao+"rho_ncep.nc")
+rho_xarr.to_netcdf(datao+"rho_era5.nc")
 
 mam_rho = rho_xarr.sel(time=rho_xarr.time.dt.month.isin([3,4,5]))
 print(mam_rho)    
 fig, ax = plt.subplots()
 collection = mam_rho.mean("time").plot.contourf(vmin=0.0,vmax=0.75,levels=12,ax=ax)
 fig.suptitle("MAM $\\rho$")
-plt.savefig(datap+"rho_MAM"+str(year1)+"_"+str(year2)+".png")
+#plt.savefig(datap+"rho_MAM"+str(year1)+"_"+str(year2)+".png")
 plt.show()
     
 son_rho = rho_xarr.sel(time=rho_xarr.time.dt.month.isin([9,10,11]))
@@ -317,7 +251,7 @@ print(son_rho)
 fig, ax = plt.subplots()
 collection = son_rho.mean("time").plot.contourf(vmin=0.0,vmax=0.75,levels=12,ax=ax)
 fig.suptitle("SON $\\rho$")
-plt.savefig(datap+"rho_SON"+str(year1)+"_"+str(year2)+".png")
+#plt.savefig(datap+"rho_SON"+str(year1)+"_"+str(year2)+".png")
 plt.show()
 
 jja_rho = rho_xarr.sel(time=rho_xarr.time.dt.month.isin([6,7,8]))
@@ -325,6 +259,9 @@ print(jja_rho)
 fig, ax = plt.subplots()
 collection = jja_rho.mean("time").plot.contourf(vmin=0.0,vmax=0.75,levels=12,ax=ax)
 fig.suptitle("JJA $\\rho$")
-plt.savefig(datap+"rho_JJA"+str(year1)+"_"+str(year2)+".png")
+#plt.savefig(datap+"rho_JJA"+str(year1)+"_"+str(year2)+".png")
 plt.show()
 # %%
+end = time.time()
+length = end - start
+print("It took", length, "seconds!")

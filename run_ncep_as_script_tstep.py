@@ -21,7 +21,7 @@ def latlonlev(dataset_list,year1,year2,latmax,latmin,lonmax,lonmin,pmin,pmax,deg
     dataset_out = []
     for d in dataset_list:
 
-        d = d.sel(time=slice(str(year1)+"-01-01", str(year2)+"-12-31"),drop=True)
+        d = d.isel(time=240, drop=True)
 
         # make sure lat runs from south to north
         if not d["lat"].to_index().is_monotonic_increasing:
@@ -55,7 +55,7 @@ def latlonlev(dataset_list,year1,year2,latmax,latmin,lonmax,lonmin,pmin,pmax,deg
            print(d.data_vars," passing pressure loop") 
 
         # make sure that the order of the dimensions is (lon, lat, ...) for all variables
-        d = d.transpose("lon", "lat", "level", "time",missing_dims='ignore')
+        d = d.transpose("lon", "lat", "level",missing_dims='ignore')
         
         dataset_out.append(d)
         
@@ -68,7 +68,7 @@ dataf ="/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WO
 datao ="/Users/ellendyer/Desktop/" 
 datap ="/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/3_ESA_GRANT/MODEL/plots/ncep/"
 #For selection and plotting
-year1 = 1980
+year1 = 1968
 year2 = 2000
 #Converting prate from kg/m2/s > mm/day
 ds_prate = (86400.0)*xr.open_dataset(dataf+"prate.mon.mean.nc")
@@ -80,7 +80,7 @@ ds_uwnd  = xr.open_dataset(dataf+"uwnd.mon.mean.nc")
 ds_vwnd = xr.open_dataset(dataf+"vwnd.mon.mean.nc")
 ds_list_in = [ds_prate.rename({"prate": "Prec"}), ds_pres.rename({"pres": "Psfc"}), ds_lhtfl.rename({"lhtfl": "Evap"}), 
                ds_shum.rename({"shum": "Shum"}), ds_uwnd.rename({"uwnd": "Uwnd"}), ds_vwnd.rename({"vwnd": "Vwnd"})] 
-ds_list_out = latlonlev(ds_list_in,year1=year1,year2=year2,latmin=-10,latmax=5,lonmin=15,lonmax=30,pmax=1000,pmin=300,deg=2.5)
+ds_list_out = latlonlev(ds_list_in,year1=year1,year2=year2,latmin=-7.5,latmax=7.5,lonmin=11,lonmax=31,pmax=1000,pmin=300,deg=2.5)
 ds = xr.merge(ds_list_out) 
 print('datasets merged')
 ds.to_netcdf(datao+"ncepds.nc")
@@ -169,76 +169,72 @@ E = scaling.evaporation.convert(ds["Evap"].values, UnitSystem.natural, UnitSyste
 #print('scaled',E)
 #print('Fx',Fx)
 
-rho_ar = np.empty((np.shape(E)[0]-1,np.shape(E)[1]-1,np.shape(E)[2]))
+rho_ar = np.empty((np.shape(E)[0]-1,np.shape(E)[1]-1))
 # Entering preprocessing and time step loop
 print("run model and plot")
-for i,time in enumerate(ds.time):
      
-    # %%
-    # preprocess E onto the secondary grid
-    Ei = preprocess.prepare_E(E[:,:,i])
-    
-    # %%
-    # preprocess water vapor fluxes onto the secondary grid
-    Fxi_left = preprocess.prepare_Fx_left(Fx[:,:,i])
-    Fxi_right = preprocess.prepare_Fx_right(Fx[:,:,i])
-    Fyi_bottom = preprocess.prepare_Fy_bottom(Fy[:,:,i])
-    Fyi_top = preprocess.prepare_Fy_top(Fy[:,:,i])
-    #print(Fxi_left)
-    #print(Fxi_right)
-    
-    # %%
-    # compute P
-    Pi = preprocess.calculate_precipitation(Fxi_left, Fxi_right, Fyi_bottom, Fyi_top, Ei, dx, dy)
-    
-    # %% [markdown]
-    # Run the model
-    
-    # %%
-    import matplotlib.pyplot as plt
-    
-    # %%
-    import logging
-    
-    logging.basicConfig()
-    logging.getLogger("bulk_recycling_model").setLevel(logging.INFO)
-    
-    # %%
-    from bulk_recycling_model import plotting
-    #from bulk_recycling_model.main_ncltest import run
-    from bulk_recycling_model.main import run
-    
-    # %%
-    class Callback:
-        def __init__(self):
-            self.n_calls = 0  # number of times callback has executed
-    
-        def __call__(self, rho: np.ndarray, k: int):
-            fig, ax = plt.subplots()
-            collection = plotting.pcolormesh(ax, rho, lon_axis, lat_axis, vmin=0.0, vmax=0.8)
-            fig.colorbar(collection)
-            fig.suptitle(f"$\\rho^k$ @ k={k:04d}")
-            plt.savefig(datap+"{self.n_calls:05d}_{k:04d}.png")
-            plt.close(fig)
-            self.n_calls += 1
-    
-    # %%
-    #! rm plots/*.png
-    
-    # %%
-    status = run(
-        Fxi_left,
-        Fxi_right,
-        Fyi_bottom,
-        Fyi_top,
-        Ei,
-        Pi,
-        dx,
-        dy,
-        max_iter=500,
-        tol=1e-3,
-        #callback=Callback(),
-    )
+# %%
+# preprocess E onto the secondary grid
+Ei = preprocess.prepare_E(E[:,:])
+
+# %%
+# preprocess water vapor fluxes onto the secondary grid
+Fxi_left = preprocess.prepare_Fx_left(Fx[:,:])
+Fxi_right = preprocess.prepare_Fx_right(Fx[:,:])
+Fyi_bottom = preprocess.prepare_Fy_bottom(Fy[:,:])
+Fyi_top = preprocess.prepare_Fy_top(Fy[:,:])
+
+# %%
+# compute P
+Pi = preprocess.calculate_precipitation(Fxi_left, Fxi_right, Fyi_bottom, Fyi_top, Ei, dx, dy)
+
+# %% [markdown]
+# Run the model
+
+# %%
+import matplotlib.pyplot as plt
+
+# %%
+import logging
+
+logging.basicConfig()
+logging.getLogger("bulk_recycling_model").setLevel(logging.INFO)
+
+# %%
+from bulk_recycling_model import plotting
+from bulk_recycling_model.main_ncltest import run
+
+# %%
+class Callback:
+    def __init__(self):
+        self.n_calls = 0  # number of times callback has executed
+
+    def __call__(self, rho: np.ndarray, k: int):
+        fig, ax = plt.subplots()
+        collection = plotting.pcolormesh(ax, rho, lon_axis, lat_axis, vmin=0.0, vmax=0.8)
+        fig.colorbar(collection)
+        fig.suptitle(f"$\\rho^k$ @ k={k:04d}")
+        plt.savefig(datap+"{self.n_calls:05d}_{k:04d}.png")
+        plt.close(fig)
+        self.n_calls += 1
+
+# %%
+#! rm plots/*.png
+
+# %%
+status = run(
+    Fxi_left,
+    Fxi_right,
+    Fyi_bottom,
+    Fyi_top,
+    Ei,
+    Pi,
+    dx,
+    dy,
+    max_iter=500,
+    tol=1e-3,
+    #callback=Callback(),
+)
 #    if status["success"]==False:
 #        print("Failed convergence")
 #        print(i,time.values)
@@ -253,31 +249,21 @@ for i,time in enumerate(ds.time):
 #        #plt.close()
 #        sys.exit()   
 #    assert status["success"]
-    print(i,time.values)
-    print(status['k'])
-    rho_ar[:,:,i] = status["rho"]
-    #print("rho: ",status["rho"])
+print(status['k'])
+rho_ar[:,:] = status["rho"]
+#print("rho: ",status["rho"])
 
-    # %%
-    # plot each timestep 
-    fig, ax = plt.subplots()
-    collection = plotting.pcolormesh(ax, status["rho"], lon_axis, lat_axis, vmin=0.0, vmax=0.8)
-    fig.colorbar(collection)
-    fig.suptitle(str(time.values)+" $\\rho$")
-    #plt.savefig(datap+"rho_"+str(time.values)+".png")
-    #plt.show()
-    plt.close()
 
-    
-    # %%
-    # plot the convergence
-    deltas = status["deltas"]
-    fig, ax = plt.subplots()
-    ax.plot(deltas)
-    ax.set_title("Convergence")
-    ax.set_xlabel("Iteration")
-    #plt.show()
-    plt.close()
+
+# %%
+# plot the convergence
+deltas = status["deltas"]
+fig, ax = plt.subplots()
+ax.plot(deltas)
+ax.set_title("Convergence")
+ax.set_xlabel("Iteration")
+#plt.show()
+plt.close()
 # %%
 lon_ar = np.linspace(start=ds.coords["lon"].min().values+lon_axis.step/2,
                      stop=ds.coords["lon"].max().values-lon_axis.step/2,
@@ -287,44 +273,21 @@ lat_ar = np.linspace(start=ds.coords["lat"].min().values+lat_axis.step/2,
                      num=lat_axis.n_points-1)
 rho_xarr = xr.DataArray(
     data=rho_ar,
-    dims=["lon", "lat", "time"],
+    dims=["lon", "lat"],
     coords=dict(
         lon=(["lon"], lon_ar),
-        lat=(["lat"], lat_ar),
-        time=(["time"],ds.time.data)
+        lat=(["lat"], lat_ar)
     ),
     attrs=dict(
         description="Recycling ratio",
         units="%",
     ),
 ) 
-rho_xarr = rho_xarr.transpose("time","lat","lon")
-#print(rho_xarr.max())
-#print(rho_xarr.min())
-#print(rho_xarr.where(rho_xarr.values>1.0).count())
-rho_xarr.to_netcdf(datao+"rho_ncep.nc")
+rho_xarr = rho_xarr.transpose("lat","lon")
+print(rho_xarr)
 
-mam_rho = rho_xarr.sel(time=rho_xarr.time.dt.month.isin([3,4,5]))
-print(mam_rho)    
 fig, ax = plt.subplots()
-collection = mam_rho.mean("time").plot.contourf(vmin=0.0,vmax=0.75,levels=12,ax=ax)
-fig.suptitle("MAM $\\rho$")
-plt.savefig(datap+"rho_MAM"+str(year1)+"_"+str(year2)+".png")
+collection = rho_xarr.plot.contourf(vmin=0.0,vmax=0.75,levels=6,ax=ax)
 plt.show()
     
-son_rho = rho_xarr.sel(time=rho_xarr.time.dt.month.isin([9,10,11]))
-print(son_rho)    
-fig, ax = plt.subplots()
-collection = son_rho.mean("time").plot.contourf(vmin=0.0,vmax=0.75,levels=12,ax=ax)
-fig.suptitle("SON $\\rho$")
-plt.savefig(datap+"rho_SON"+str(year1)+"_"+str(year2)+".png")
-plt.show()
-
-jja_rho = rho_xarr.sel(time=rho_xarr.time.dt.month.isin([6,7,8]))
-print(jja_rho)    
-fig, ax = plt.subplots()
-collection = jja_rho.mean("time").plot.contourf(vmin=0.0,vmax=0.75,levels=12,ax=ax)
-fig.suptitle("JJA $\\rho$")
-plt.savefig(datap+"rho_JJA"+str(year1)+"_"+str(year2)+".png")
-plt.show()
 # %%
