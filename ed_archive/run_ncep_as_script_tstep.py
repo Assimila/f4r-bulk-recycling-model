@@ -202,7 +202,7 @@ logging.getLogger("bulk_recycling_model").setLevel(logging.INFO)
 
 # %%
 from bulk_recycling_model import plotting
-from bulk_recycling_model.main_ncltest import run
+from ed_archive.main_ncltest import run
 
 # %%
 class Callback:
