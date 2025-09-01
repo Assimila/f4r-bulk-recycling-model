@@ -14,7 +14,7 @@ dataf ="/Volumes/ESA_F4R/era/"
 datao ="/Volumes/ESA_F4R/ed_prepare/" 
 datap ="/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/3_ESA_GRANT/MODEL/plots/era/"
 
-years = np.arange(1994,2025)
+years = np.arange(2011,2025)
 for YR in years:
     print('Running for year: ',str(YR))
     # %%
@@ -211,6 +211,7 @@ for YR in years:
     from bulk_recycling_model.main import run
     
     rho_ar = np.empty((np.shape(E)[0]-1,np.shape(E)[1]-1,np.shape(E)[2]))
+    txtf = open(datao+"text_out_"+str(YR)+".txt", mode="wt")
     #Entering preprocessing and time step loop
     #Run model and plot
     for i,time in enumerate(ds.time):
@@ -259,6 +260,8 @@ for YR in years:
         print(i,time.values)
         print(status['k'])
         rho_ar[:,:,i] = status["rho"]
+        txtf.write(str(time.values))
+        txtf.write(str(status['k']))
     
 #        # plot each timestep 
 #        fig, ax = plt.subplots()
@@ -359,6 +362,7 @@ for YR in years:
 #    plt.show()
     
     rho_xarr.close()
+    txtf.close()
     
     
     

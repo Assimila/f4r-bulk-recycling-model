@@ -11,4 +11,8 @@ dependencies:
   - matplotlib
   - xarray
   - netCDF4
+  - geopandas
+  - cartopy
+  - dask
+  - rioxarray
 prefix: /home/sam/miniconda3/envs/f4r-bulk-recycling-model
