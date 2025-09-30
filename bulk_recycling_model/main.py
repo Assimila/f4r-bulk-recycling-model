@@ -5,6 +5,7 @@ from typing import Callable, TypedDict
 import numpy as np
 
 from .coefficients import Coefficients
+from .rotate import rot90, rot90_flux_lrbt
 from .utils import (
     check_lr_flux,
     check_tb_flux,
@@ -97,7 +98,6 @@ def run(
 
     Raises:
         ValueError: if any of the inputs are not valid
-        RuntimeError: if the algorithm does not converge within max_iter iterations
     """
     # ------------------------------------------------------------------------------------------------------------------
     # Validate inputs
@@ -312,3 +312,77 @@ def run(
         deltas=deltas,
         time_taken=time_taken,
     )
+
+
+
+def run_4_orientations(
+    Fx_left: np.ndarray,
+    Fx_right: np.ndarray,
+    Fy_bottom: np.ndarray,
+    Fy_top: np.ndarray,
+    E: np.ndarray,
+    P: np.ndarray,
+    dx: float,
+    dy: float,
+    rho_0: float = 0.0,
+    R: float = 0.2,
+    R_1: float = 0.2,
+    max_iter: int = 1000,
+    tol: float = 1e-3,
+    callback: Callable[[np.ndarray, int], None] = callback,
+) -> dict[int, RunStatus]:
+    """
+    Run the solver 4 times, rotating the grid by 90 degrees counter-clockwise each time.
+
+    Returns:
+        dict mapping from number of 90 degree rotations to RunStatus.
+        The returned data is always in the original orientation.
+    """
+    # mapping from k to RunStatus
+    run_status: dict[int, RunStatus] = {}  
+
+    for k in range(4):
+        logger.info(f"Attempt {k + 1} of 4 with rotation of {k * 90} degrees")
+
+        # rotate by 90 degrees counter-clockwise k times
+        Fx_left_k, Fx_right_k, Fy_bottom_k, Fy_top_k = rot90_flux_lrbt(
+            Fx_left, Fx_right, Fy_bottom, Fy_top, k=k
+        )
+        E_k = rot90(E, k=k)
+        P_k = rot90(P, k=k)
+        if k % 2 == 1:
+            # swap dx and dy for odd k
+            dx_k = dy
+            dy_k = dx
+        else:
+            dx_k = dx
+            dy_k = dy
+
+        status = run(
+            Fx_left_k,
+            Fx_right_k,
+            Fy_bottom_k,
+            Fy_top_k,
+            E_k,
+            P_k,
+            dx_k,
+            dy_k,
+            rho_0,
+            R,
+            R_1,
+            max_iter,
+            tol,
+            callback,
+        )
+
+        logger.info(
+            f"Attempt finished with success={status['success']} after {status['k']} iterations. "
+            f"Final delta={status['deltas'][-1]}."
+        )
+
+        # rotate the result (scalar field rho) back to original orientation
+        status["rho"] = rot90(status["rho"], k=-k)
+
+        run_status[k] = status
+
+    return run_status
