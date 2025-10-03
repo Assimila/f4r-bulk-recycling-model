@@ -223,7 +223,7 @@ logging.getLogger("bulk_recycling_model").setLevel(logging.INFO)
 # %%
 print("run model and plot")
 from bulk_recycling_model import plotting
-from bulk_recycling_model.main import run
+from bulk_recycling_model.main_orig import run
 
 # %%
 class Callback:

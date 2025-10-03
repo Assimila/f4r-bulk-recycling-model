@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 
 from bulk_recycling_model import preprocess
-from bulk_recycling_model.main import run
+from bulk_recycling_model.main_orig import run
 from bulk_recycling_model.scaling import Scaling, UnitSystem
 from tests.data.load_data import load_data
 

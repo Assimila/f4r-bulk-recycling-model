@@ -208,7 +208,7 @@ for YR in years:
     logging.basicConfig()
     logging.getLogger("bulk_recycling_model").setLevel(logging.INFO)
     from bulk_recycling_model import plotting
-    from bulk_recycling_model.main import run
+    from bulk_recycling_model.main_orig import run
     
     rho_ar = np.empty((np.shape(E)[0]-1,np.shape(E)[1]-1,np.shape(E)[2]))
     txtf = open(datao+"text_out_"+str(YR)+".txt", mode="wt")
