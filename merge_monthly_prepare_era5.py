@@ -18,7 +18,7 @@ dataf ="/Volumes/ESA_F4R/era/"
 datao ="/Volumes/ESA_F4R/ed_prepare/" 
 datap ="/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/3_ESA_GRANT/MODEL/plots/era/"
 
-for YR in range(2024,2025):
+for YR in range(1993,1993):
     print('Year: ',YR)
     # %%
     #For selection and plotting
