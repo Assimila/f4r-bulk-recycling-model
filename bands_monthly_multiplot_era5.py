@@ -63,6 +63,7 @@ for B in ['N','EQ','S']:
 
         collection = rho_plot.plot.contourf(x="lon", y="lat", col="time", col_wrap=12,
                                             vmin=0.0,vmax=0.6,
+                                            transform = ccrs.PlateCarree(),
                                             levels=13,extend='max',cmap=cmap,
                                             cbar_kwargs={"location":"bottom"} )
         
