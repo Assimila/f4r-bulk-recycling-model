@@ -3,12 +3,12 @@ import unittest
 import numpy as np
 
 from bulk_recycling_model import preprocess
-from bulk_recycling_model.main import run
+from bulk_recycling_model.main import run, run_4_orientations
 from bulk_recycling_model.scaling import Scaling, UnitSystem
 from tests.data.load_data import load_data
 
 
-class Test_run(unittest.TestCase):
+class TestBase(unittest.TestCase):
 
     def setUp(self):
         dat = load_data()
@@ -58,6 +58,9 @@ class Test_run(unittest.TestCase):
         self.dx = dx
         self.dy = dy
 
+
+class Test_run(TestBase):
+
     def test_ok(self):
         """
         Can run the model with the test data
@@ -96,3 +99,34 @@ class Test_run(unittest.TestCase):
         assert not status["success"]
         assert status["k"] == 1
         assert len(status["deltas"]) == 1
+
+
+class Test_run_4_orientations(TestBase):
+
+    def test_ok(self):
+        """
+        run all 4 orientations
+        """
+        run_status = run_4_orientations(
+            self.Fx_left,
+            self.Fx_right,
+            self.Fy_bottom,
+            self.Fy_top,
+            self.E,
+            self.P,
+            self.dx,
+            self.dy,
+            tol=1e-3,
+        )
+        assert len(run_status) == 4
+        for k, status in run_status.items():
+            assert status["success"]
+            assert status["k"] > 0
+            assert len(status["deltas"]) == status["k"]
+
+        rho = [status["rho"] for status in run_status.values()]
+        # compare the solutions pairwise
+        for i in range(4):
+            for j in range(i + 1, 4):
+                diff = np.abs(rho[i] - rho[j]).max()
+                self.assertLess(diff, 1e-2)  # all solutions should be similar
