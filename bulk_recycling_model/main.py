@@ -4,6 +4,7 @@ from typing import Callable, TypedDict
 
 import numpy as np
 
+from .clamping import clamp
 from .coefficients import Coefficients
 from .rotate import rot90, rot90_flux_lrbt
 from .utils import (
@@ -64,6 +65,7 @@ def run(
     rho_0: float = 0.0,
     R: float = 0.2,
     R_1: float = 0.2,
+    clamp_tolerance: float | None = None,
     max_iter: int = 1000,
     tol: float = 1e-3,
     callback: Callable[[np.ndarray, int], None] = callback,
@@ -90,6 +92,11 @@ def run(
         R: relaxation parameter within the model domain
         R_1: relaxation parameter external to the model domain.
             used for extrapolation of outflows.
+        clamp_tolerance: If provided, apply smooth clamping to rho after each iteration.
+            Effectively limiting rho to the range [-clamp_tolerance, 1 + clamp_tolerance].
+            Warning: Clamping effectively prevents runaway solutions 
+            but can mask the numerical instability in the model itself.
+            The may lead to an inaccurate final "converged" equilibrium state.
         max_iter: maximum number of iterations
         tol: tolerance for convergence.
             The algorithm halts when the absolute difference between iterations (including relaxation) is less than tol.
@@ -143,6 +150,9 @@ def run(
     # check tol > 0
     if tol <= 0:
         raise ValueError("tol must be positive")
+
+    if clamp_tolerance is not None and clamp_tolerance <= 0:
+        raise ValueError("clamp_tolerance must be positive")
 
     # ------------------------------------------------------------------------------------------------------------------
     # Prepare for iteration
@@ -208,7 +218,7 @@ def run(
 
             logger.debug(f"Iteration {k} of {max_iter}, diagonal {diag}")
 
-            # skip the first and last cell of the diagonal - 
+            # skip the first and last cell of the diagonal -
             # these are in the buffer, outside the model domain, and updated later.
             for i, j in drop_first(drop_last(diagonal(N_buffered, M_buffered, diag))):
                 # ------------------------------------------------------------------------------------------------------
@@ -274,6 +284,18 @@ def run(
         callback(rho_next, k)
 
         # --------------------------------------------------------------------------------------------------------------
+        # Apply clamping if requested
+        # --------------------------------------------------------------------------------------------------------------
+
+        if clamp_tolerance is not None:
+            logger.debug(f"Iteration {k} of {max_iter}. Applying clamping with tolerance {clamp_tolerance}")
+            rho_next = clamp(
+                rho_next,
+                tolerance=clamp_tolerance,
+            )
+            callback(rho_next, k)
+
+        # --------------------------------------------------------------------------------------------------------------
         # Finished step
         # --------------------------------------------------------------------------------------------------------------
 
@@ -314,7 +336,6 @@ def run(
     )
 
 
-
 def run_4_orientations(
     Fx_left: np.ndarray,
     Fx_right: np.ndarray,
@@ -327,6 +348,7 @@ def run_4_orientations(
     rho_0: float = 0.0,
     R: float = 0.2,
     R_1: float = 0.2,
+    clamp_tolerance: float | None = None,
     max_iter: int = 1000,
     tol: float = 1e-3,
     callback: Callable[[np.ndarray, int], None] = callback,
@@ -339,15 +361,13 @@ def run_4_orientations(
         The returned data is always in the original orientation.
     """
     # mapping from k to RunStatus
-    run_status: dict[int, RunStatus] = {}  
+    run_status: dict[int, RunStatus] = {}
 
     for k in range(4):
         logger.info(f"Attempt {k + 1} of 4 with rotation of {k * 90} degrees")
 
         # rotate by 90 degrees counter-clockwise k times
-        Fx_left_k, Fx_right_k, Fy_bottom_k, Fy_top_k = rot90_flux_lrbt(
-            Fx_left, Fx_right, Fy_bottom, Fy_top, k=k
-        )
+        Fx_left_k, Fx_right_k, Fy_bottom_k, Fy_top_k = rot90_flux_lrbt(Fx_left, Fx_right, Fy_bottom, Fy_top, k=k)
         E_k = rot90(E, k=k)
         P_k = rot90(P, k=k)
         if k % 2 == 1:
@@ -370,6 +390,7 @@ def run_4_orientations(
             rho_0,
             R,
             R_1,
+            clamp_tolerance,
             max_iter,
             tol,
             callback,
