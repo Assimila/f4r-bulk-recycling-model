@@ -62,10 +62,13 @@ for B in ['N','EQ','S']:
         cmap.set_extremes(over='lightgrey')
 
         collection = rho_plot.plot.contourf(x="lon", y="lat", col="time", col_wrap=12,
-                                            vmin=0.0,vmax=0.6,
-                                            transform = ccrs.PlateCarree(),
+                                            vmin=0.0,vmax=0.8,
+                                            #transform = ccrs.PlateCarree(),
                                             levels=13,extend='max',cmap=cmap,
-                                            cbar_kwargs={"location":"bottom"} )
+                                            cbar_kwargs={"location":"bottom",
+                                                         "fraction":0.01,
+                                                         "shrink":0.5,
+                                                         "pad":0.0015} )
         
         #ax.set_extent([band[B][2]-1,band[B][3]+1,band[B][0]-1,band[B][1]+1])
         #ax.set_title(" $\\rho$ band-"+B+" (rot "+str(r-1)+")")
@@ -74,7 +77,7 @@ for B in ['N','EQ','S']:
         #gl.top_labels = False
         #gl.right_labels = False
         plt.savefig(datap+"rho_band_"+B+"rot"+str(r-1)+".png")
-        plt.show()
+        #plt.show()
             
     rho_xarr.close()
             

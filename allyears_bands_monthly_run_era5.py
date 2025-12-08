@@ -20,9 +20,9 @@ import time as timer
 start_all = timer.time()
 
 # %%
-for B in ['N','EQ','S']:
+for B in ['EQ']:
     print('running band:', B)
-    years = np.arange(2009,2010)
+    years = np.arange(1990,2025)
     for YR in years:
         print('running year:', YR)
         dataf ="/Volumes/ESA_F4R/era/" 
@@ -232,8 +232,8 @@ for B in ['N','EQ','S']:
                 Pi,
                 dx,
                 dy,
-                R=0.2,
-                R_1=0.2,
+                R=0.1,
+                R_1=0.1,
                 max_iter=500,
                 tol=1e-3,
             )
@@ -285,7 +285,7 @@ for B in ['N','EQ','S']:
             ),
         ) 
         rho_xarr = rho_xarr.transpose("rot","time","lat","lon")
-        rho_xarr.to_netcdf(datao+"bands_rho/band_"+B+"_rot_rho_era5_"+str(YR)+".nc")
+        rho_xarr.to_netcdf(datao+"bands_rho_exp/band_"+B+"_rot_rho_era5_"+str(YR)+".nc")
             
         rho_xarr.close()
             
