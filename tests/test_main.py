@@ -120,6 +120,27 @@ class Test_run(TestBase):
         assert status["k"] == 1
         assert len(status["deltas"]) == 1
 
+    def test_DELTA_DIVERGENCE_THRESHOLD(self):
+        """
+        test divergence early exit
+        """
+        status = run(
+            self.Fx_left,
+            self.Fx_right,
+            self.Fy_bottom,
+            self.Fy_top,
+            self.E,
+            self.P,
+            self.dx,
+            self.dy,
+            # no relaxation to exacerbate divergence
+            R=1,
+            R_1=1,
+        )
+        assert not status["success"]
+        assert status["k"] < 1000  # should exit early due to divergence
+        assert len(status["deltas"]) == status["k"]
+
 
 class Test_run_4_orientations(TestBase):
 
