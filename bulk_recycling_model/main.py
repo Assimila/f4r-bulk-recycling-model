@@ -52,6 +52,12 @@ def callback(rho: np.ndarray, k: int) -> None:
     pass
 
 
+# Fail early condition.
+# If the convergence delta exceeds this value,
+# we consider the solution to be diverging (running away).
+DELTA_DIVERGENCE_THRESHOLD = 1e3
+
+
 def run(
     Fx_left: np.ndarray,
     Fx_right: np.ndarray,
@@ -66,6 +72,7 @@ def run(
     R_1: float = 0.2,
     max_iter: int = 1000,
     tol: float = 1e-3,
+    divergence_tolerance: float = DELTA_DIVERGENCE_THRESHOLD,
     callback: Callable[[np.ndarray, int], None] = callback,
 ) -> RunStatus:
     """
@@ -93,6 +100,7 @@ def run(
         max_iter: maximum number of iterations
         tol: tolerance for convergence.
             The algorithm halts when the absolute difference between iterations (including relaxation) is less than tol.
+        divergence_tolerance: tolerance for divergence (fail early).
         callback: A callback function, with arguments (rho, k).
             May be called multiple times per iteration.
 
@@ -171,6 +179,8 @@ def run(
     k = 0
     iter_start = datetime.now(UTC)
     time_taken = timedelta(0)
+
+    success = False
 
     # ------------------------------------------------------------------------------------------------------------------
     # Iterate
@@ -285,34 +295,37 @@ def run(
         deltas.append(delta)
         logger.info(f"Iteration {k} of {max_iter}. delta = {delta}")
 
-        if delta < tol:
-            time_taken = datetime.now(UTC) - iter_start
-            logger.info(f"Converged in {k} iterations and {time_taken}")
-            return RunStatus(
-                success=True,
-                rho=unbuffer(rho_next),
-                k=k,
-                deltas=deltas,
-                time_taken=time_taken,
-            )
-
         # update rho for next iteration
         rho = rho_next
 
+        if delta < tol:
+            logger.info(f"Converged in {k} iterations")
+            success = True
+            break
+        elif delta > divergence_tolerance:
+            logger.warning(f"Diverged in {k} iterations")
+            break
+        elif not np.isfinite(delta):
+            logger.warning(f"Diverged (non-finite delta) in {k} iterations")
+            break
+
+    else:
+        logger.warning(f"Did not converge in {max_iter} iterations")
+
     # ------------------------------------------------------------------------------------------------------------------
-    # hit max_iter without converging
+    # Finished iteration
     # ------------------------------------------------------------------------------------------------------------------
 
-    logger.warning(f"Did not converge in {max_iter} iterations")
+    time_taken = datetime.now(UTC) - iter_start
+    logger.info(f"Total time: {time_taken}")
 
     return RunStatus(
-        success=False,
+        success=success,
         rho=unbuffer(rho),
         k=k,
         deltas=deltas,
         time_taken=time_taken,
     )
-
 
 
 def run_4_orientations(
@@ -329,6 +342,7 @@ def run_4_orientations(
     R_1: float = 0.2,
     max_iter: int = 1000,
     tol: float = 1e-3,
+    divergence_tolerance: float = DELTA_DIVERGENCE_THRESHOLD,
     callback: Callable[[np.ndarray, int], None] = callback,
 ) -> dict[int, RunStatus]:
     """
@@ -367,12 +381,13 @@ def run_4_orientations(
             P_k,
             dx_k,
             dy_k,
-            rho_0,
-            R,
-            R_1,
-            max_iter,
-            tol,
-            callback,
+            rho_0=rho_0,
+            R=R,
+            R_1=R_1,
+            max_iter=max_iter,
+            tol=tol,
+            divergence_tolerance=divergence_tolerance,
+            callback=callback,
         )
 
         logger.info(
