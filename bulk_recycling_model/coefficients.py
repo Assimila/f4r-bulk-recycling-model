@@ -239,9 +239,33 @@ class Coefficients:
         Fx_left = self.Fx_left_adjusted
 
         return Fx_left * self.dy
-    
+
+    @cached_property
+    def instability_heuristic(self) -> np.ndarray:
+        """
+        Numerical instability heuristic.
+
+        A value >> 1 indicates a potential for instability.
+        """
+        numerator = np.max(
+            [
+                np.abs(a)
+                for a in (
+                    self.alpha_1,
+                    self.alpha_C,
+                    self.alpha_U,
+                    self.alpha_R,
+                    self.alpha_D,
+                    self.alpha_L,
+                )
+            ],
+            axis=0,
+        )
+        denominator = np.abs(self.A_0)
+        return numerator / denominator
+
     # For each coefficient, provide a version with a buffer of NaNs
-    
+
     @cached_property
     def A_0_buffered(self):
         return utils.buffer(self.A_0)
@@ -249,23 +273,23 @@ class Coefficients:
     @cached_property
     def alpha_1_buffered(self):
         return utils.buffer(self.alpha_1)
-    
+
     @cached_property
     def alpha_C_buffered(self):
         return utils.buffer(self.alpha_C)
-    
+
     @cached_property
     def alpha_U_buffered(self):
         return utils.buffer(self.alpha_U)
-    
+
     @cached_property
     def alpha_R_buffered(self):
         return utils.buffer(self.alpha_R)
-    
+
     @cached_property
     def alpha_D_buffered(self):
         return utils.buffer(self.alpha_D)
-    
+
     @cached_property
     def alpha_L_buffered(self):
         return utils.buffer(self.alpha_L)
