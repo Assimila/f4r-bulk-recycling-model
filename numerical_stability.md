@@ -3,6 +3,18 @@
 We have observed that in some cases this model does not converge to a well-behaved solution.
 But instead diverges (runs away) to very large values of $\rho$.
 
+e.g. 1 - 1992 August
+
+![1992 08 instability](static/1992-08-instability.png)
+
+e.g. 2 - 1994 July
+
+![1994 07 instability](static/1994-07-instability.png)
+
+
+The above examples are the scalar field of $\rho$,
+plotted after the model has detected divergence and exited.
+
 To understand why this happens, we need to look at the coefficients of the model equations.
 
 $$
@@ -131,6 +143,23 @@ $$
 for $X \in \{1, C, U, R, D, L\}$.
 
 This is implemented as `Coefficients.instability_heuristic`.
+
+The examples below correspond to the same cases as above.
+
+e.g. 1 - 1992 August
+
+![1992 08 instability heuristic](static/1992-08-instability-heuristic.png)
+
+e.g. 2 - 1994 July
+
+![1994 07 instability heuristic](static/1994-07-instability-heuristic.png)
+
+### Observations
+
+Well behaved cases tend to have instability heuristic values $\lesssim 1.2$.
+
+Model runs that diverge tend to have instability heuristic values $\gtrsim 1.6$.
+This is usually just one or two grid cells.
 
 ## References
 
