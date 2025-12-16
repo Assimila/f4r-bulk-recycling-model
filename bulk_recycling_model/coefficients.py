@@ -2,7 +2,7 @@ from functools import cached_property
 
 import numpy as np
 
-from . import cases, utils
+from . import cases, rotate, utils
 
 
 class Coefficients:
@@ -246,6 +246,8 @@ class Coefficients:
         Numerical instability heuristic.
 
         A value >> 1 indicates a potential for instability.
+
+        Returns: instability heuristic array on the secondary grid
         """
         numerator = np.max(
             [
@@ -263,6 +265,53 @@ class Coefficients:
         )
         denominator = np.abs(self.A_0)
         return numerator / denominator
+
+    def rotated_instability_heuristic(self, k: int = 0) -> np.ndarray:
+        """
+        Numerical instability heuristic.
+
+        A value >> 1 indicates a potential for instability.
+
+        Args:
+            k: Number of times to rotate by 90 degrees counter-clockwise. May be negative.
+
+        Returns: instability heuristic array on the secondary grid, in the original orientation
+        """
+        rotated_coeffs = self._rotate(k=k)
+        instability_heuristic_rotated = rotated_coeffs.instability_heuristic
+        # rotate back to original orientation
+        instability_heuristic = rotate.rot90(instability_heuristic_rotated, k=-k)
+        return instability_heuristic
+
+    def _rotate(self, k: int) -> "Coefficients":
+        """
+        Args:
+            k: Number of times to rotate by 90 degrees counter-clockwise. May be negative.
+
+        Returns:
+            Rotated Coefficients object
+        """
+        # rotate by 90 degrees counter-clockwise `rotation` times
+        Fx_left, Fx_right, Fy_bottom, Fy_top = rotate.rot90_flux_lrbt(
+            self.Fx_left, self.Fx_right, self.Fy_bottom, self.Fy_top, k=k
+        )
+        E = rotate.rot90(self.E, k=k)
+        P = rotate.rot90(self.P, k=k)
+        if k % 2 == 1:
+            # swap dx and dy for odd rotations
+            dx, dy = self.dy, self.dx
+        else:
+            dx, dy = self.dx, self.dy
+        return Coefficients(
+            Fx_left=Fx_left,
+            Fx_right=Fx_right,
+            Fy_bottom=Fy_bottom,
+            Fy_top=Fy_top,
+            E=E,
+            P=P,
+            dx=dx,
+            dy=dy,
+        )
 
     # For each coefficient, provide a version with a buffer of NaNs
 

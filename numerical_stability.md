@@ -48,11 +48,11 @@ $$
 
 where 
 
-- $P$ is the precipitation rate
+- $P$ is the precipitation
 - $F^{(x)}_R$ is the x-flux of atmospheric water vapour on the **right** edge of the grid cell
 - $F^{(y)}_U$ is the y-flux of atmospheric water vapour on the **upper** edge of the grid cell
 
-I think it is clear from all four cases that $A_0$ should be positive, assuming a physically meaningful precipitation rate $P$,
+I think it is clear from all four cases that $A_0$ should be positive, assuming a physically meaningful precipitation $P$,
 and additive flux terms matching predominant flux directions.
 
 ### Negative $P$
@@ -76,9 +76,9 @@ as the analysis residuals with the precipitation
 data Pd.
 
 We have observed that in some cases the calculated $P$ is negative.
-See also [[2]](#ref-2), §2d. and Fig. 7.
+See also [[2]](#ref-2), §2d and Fig. 7.
 
-Clearly, a negative precipitation rate is unphysical, and should be a concern.
+Clearly, a negative precipitation is unphysical, and should be a concern.
 However, it is not _necessarily_ fatal to the model stability.
 
 The problematic regime is when $P$ is negative enough to push $A_0$ close to zero.
@@ -137,7 +137,7 @@ A similar analysis can be done for the other coupling terms $\alpha_U$, $\alpha_
 We propose a heuristic for numerical instability:
 
 $$
-\max ( \, | \alpha_X / A_0 | \, ) \gg 1
+\max ( | \alpha_X / A_0 | ) \gg 1
 $$
 
 for $X \in \{1, C, U, R, D, L\}$.
@@ -159,7 +159,15 @@ e.g. 2 - 1994 July
 Well behaved cases tend to have instability heuristic values $\lesssim 1.2$.
 
 Model runs that diverge tend to have instability heuristic values $\gtrsim 1.6$.
-This is usually just one or two grid cells.
+This is usually just one or two unlucky grid cells.
+In ~75% of these cases, the identified grid cell corresponds with a negative precipitation $P$.
+
+The model coefficients, and hence this criteria,
+are different on a rotated grid.
+In the example below, the instability heuristic is plotted in all four orientations.
+Rotating the grid by 180° permits a well-behaved solution.
+
+![2017 08 rotated instability heuristic](static/2017_08-instabilitiy-heuristic.png)
 
 ## References
 
