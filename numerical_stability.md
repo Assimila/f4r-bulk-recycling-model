@@ -164,7 +164,8 @@ In ~75% of these cases, the identified grid cell corresponds with a negative pre
 
 The model coefficients, and hence this criteria,
 are different on a rotated grid.
-In the example below, the instability heuristic is plotted in all four orientations.
+In the example below, the grid is rotated to all four possible orientations.
+We plot the instability heuristic for each orientation, rotated back to the original orientation for comparison.
 Rotating the grid by 180° permits a well-behaved solution.
 
 ![2017 08 rotated instability heuristic](static/2017_08-instabilitiy-heuristic.png)
