@@ -170,6 +170,144 @@ Rotating the grid by 180° permits a well-behaved solution.
 
 ![2017 08 rotated instability heuristic](static/2017_08-instabilitiy-heuristic.png)
 
+## Mitigation strategies
+
+The following strategies may be employed (in order) to mitigate numerical instability.
+
+### 1. Input evaporation $E$
+
+The first port of call is to check the input evaporation $E$ field.
+Specifically the input to `preprocess.calculate_precipitation`.
+This should be physically reasonable given the temporal aggregation period.
+
+Negative and very small values of $E$ should be regarded as potentially problematic.
+
+### 2. Calculated precipitation $P$
+
+Negative values of $P$ are not necessarily fatal to the numerical stability of the model.
+However, they are unphysical.
+
+⚠️ It is not clear that any solution is meaningful given non-negligible negative $P$. ⚠️
+
+See [[2]](#ref-2), §2d and Fig. 7, where the authors discuss their concerns and analysis of negative precipitation (referred to as model bias).
+
+An extreme example is shown below from 1990 February.
+75% of grid cells have negative $P$,
+with average $P$ of -1.63 mm/day across the domain.
+The model does not converge in this case.
+
+![1990 02 negative P](static/1990-02-negative-P.png)
+
+The cause of negative $P$ is clear from the conservation of water vapour [[2]](#ref-2), equations (2.1) and (A.1).
+
+$$
+P = E - \nabla \cdot \vec{F}
+$$
+
+Divergence in flux drives negative $P$ when not balanced by sufficient evaporation $E$.
+This may occur over steep orography, and/or in the presence of strong wind shear, 
+where the vertical integration (over pressure levels from surface pressure) is not well resolved.
+
+### 3. Check the instability heuristic
+
+```python
+P = preprocess.calculate_precipitation(...)
+coeffs = coefficients.Coefficients(..., E, P, ...)
+instability_heuristic = coeffs.instability_heuristic
+```
+
+This is a numpy array on the second grid.
+Higher values indicate the location of potential numerical instability.
+
+Hot spots in the instability heuristic identify the location of problematic input data.
+
+### 4. Preprocessing
+
+The usual data preprocessing pipeline is
+
+- create temporal aggregates of wind and humidity (on vertical / pressure levels)
+- compute the integrated fluxes on the primary grid
+- apply scaling
+- interpolate all variables onto the secondary grid
+
+We suggest considering alternative strategies
+
+#### 4a. Delay temporal aggregation
+
+Compute the integrated fluxes on a per-timestep basis,
+then apply temporal aggregation.
+This should capture co-variability of wind and humidity at height more accurately.
+
+#### 4b. Delay vertical integration
+
+Interpolate vertical / pressure level data onto the secondary grid
+before computing the integrated fluxes.
+This should capture orographic effects and wind shear more accurately.
+
+#### 4c. Course resolution
+
+Instead of defining the secondary grid as a "half-step" offset from the primary grid,
+define the secondary grid directly on top of the primary grid at half the resolution.
+
+See `bulk_recycling_model/preprocess_low_resolution.py` for utility functions to support this,
+and `notebooks/run_dao_data_low_res.ipynb` for an example workflow.
+
+### 5. Rotate the grid
+
+Rotating the grid by 90°, 180°, or 270°
+may change the coefficients sufficiently to permit a well-behaved solution.
+
+You can inspect the instability heuristic in each orientation
+
+```python
+# k = 0, 1, 2, 3 for 0°, 90°, 180°, 270°
+instability_heuristic = coeffs.rotated_instability_heuristic(k=1)
+```
+
+### 6. Nudge problematic grid cells
+
+Usually only one or two grid cells are the source of numerical instability.
+These appear as "hot pixels" in the instability heuristic field.
+
+You can locate hot pixel(s)
+
+```python
+i, j = bulk_recycling_model.numerical_stability.identify_hot_pixel(
+    coeffs.instability_heuristic
+)
+```
+
+As a last resort, apply a nudge to the evaporation $E$.
+
+The aim here is to move the coefficients $A_0$ and $A_1$ away from the regime where $| A_1 / A_0 | \gg 1$,
+whilst conserving local evaporation.
+
+```python
+nudge = ...
+E = bulk_recycling_model.numerical_stability.nudge_hot_pixel(
+    E, i, j, offset=nudge
+)
+P = preprocess.calculate_precipitation(..., E, ...)
+```
+
+This is not a physically rigorous approach.
+But may be acceptable if the nudge is local and evaporation is conserved.
+
+## Other Interventions
+
+The following interventions have been considered,
+but not found to be effective.
+Your mileage may vary.
+
+### Clip $P$
+
+Clipping negative values of $P$ to zero.
+Note that this violates conservation of water vapour.
+
+### Clamp $\rho$
+
+Applying a clamp to $\rho$ after each iteration to enforce physical bounds $[0, 1]$.
+
 ## References
 
 <a id="ref-1"></a>1. Burde, G. I., 2006: Bulk Recycling Models with Incomplete Vertical Mixing.
