@@ -217,10 +217,8 @@ instability_heuristic = coeffs.instability_heuristic
 ```
 
 This is a numpy array on the secondary grid.
-Higher values indicate the location of potential numerical instability.
-
-Hot spots in the instability heuristic identify the location of problematic input data,
-which is usually to origin of numerical instability.
+Higher values (hot spots) identify the location problematic input data,
+which is usually the origin of numerical instability.
 
 ### 4. Preprocessing
 
