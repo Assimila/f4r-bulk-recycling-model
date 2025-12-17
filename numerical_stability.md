@@ -216,17 +216,19 @@ coeffs = coefficients.Coefficients(..., E, P, ...)
 instability_heuristic = coeffs.instability_heuristic
 ```
 
-This is a numpy array on the second grid.
+This is a numpy array on the secondary grid.
 Higher values indicate the location of potential numerical instability.
 
-Hot spots in the instability heuristic identify the location of problematic input data.
+Hot spots in the instability heuristic identify the location of problematic input data,
+which is usually to origin of numerical instability.
 
 ### 4. Preprocessing
 
 The usual data preprocessing pipeline is
 
-- create temporal aggregates of wind and humidity (on vertical / pressure levels)
-- compute the integrated fluxes on the primary grid
+- input data in (x, y, z, t)
+- create temporal aggregates of wind and humidity (x, y, z)
+- compute the integrated fluxes on the primary grid (x, y)
 - apply scaling
 - interpolate all variables onto the secondary grid
 
@@ -234,13 +236,13 @@ We suggest considering alternative strategies
 
 #### 4a. Delay temporal aggregation
 
-Compute the integrated fluxes on a per-timestep basis,
-then apply temporal aggregation.
+Compute the integrated fluxes on a per-timestep basis (x, y, t),
+then apply temporal aggregation (x, y).
 This should capture co-variability of wind and humidity at height more accurately.
 
 #### 4b. Delay vertical integration
 
-Interpolate vertical / pressure level data onto the secondary grid
+Interpolate vertical / pressure level data (x, y, z) onto the secondary grid
 before computing the integrated fluxes.
 This should capture orographic effects and wind shear more accurately.
 
@@ -257,9 +259,12 @@ and `notebooks/run_dao_data_low_res.ipynb` for an example workflow.
 Rotating the grid by 90°, 180°, or 270°
 may change the coefficients sufficiently to permit a well-behaved solution.
 
-You can inspect the instability heuristic in each orientation
+You can inspect the instability heuristic in each orientation,
+rotated back to the original orientation for comparison.
 
 ```python
+P = preprocess.calculate_precipitation(...)
+coeffs = coefficients.Coefficients(..., E, P, ...)
 # k = 0, 1, 2, 3 for 0°, 90°, 180°, 270°
 instability_heuristic = coeffs.rotated_instability_heuristic(k=1)
 ```
@@ -295,8 +300,7 @@ But may be acceptable if the nudge is local and evaporation is conserved.
 
 ## Other Interventions
 
-The following interventions have been considered,
-but not found to be effective.
+The following interventions have been considered but not found to be effective.
 Your mileage may vary.
 
 ### Clip $P$
