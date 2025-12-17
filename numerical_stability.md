@@ -269,6 +269,12 @@ coeffs = coefficients.Coefficients(..., E, P, ...)
 instability_heuristic = coeffs.rotated_instability_heuristic(k=1)
 ```
 
+and run the model on the rotated grid
+
+```python
+status = main.run_rotated(..., rotation=k)
+```
+
 ### 6. Nudge problematic grid cells
 
 Usually only one or two grid cells are the source of numerical instability.
@@ -277,7 +283,7 @@ These appear as "hot pixels" in the instability heuristic field.
 You can locate hot pixel(s)
 
 ```python
-i, j = bulk_recycling_model.numerical_stability.identify_hot_pixel(
+i, j = numerical_stability.identify_hot_pixel(
     coeffs.instability_heuristic
 )
 ```
@@ -289,7 +295,7 @@ whilst conserving local evaporation.
 
 ```python
 nudge = ...
-E = bulk_recycling_model.numerical_stability.nudge_hot_pixel(
+E = numerical_stability.nudge_hot_pixel(
     E, i, j, offset=nudge
 )
 P = preprocess.calculate_precipitation(..., E, ...)
