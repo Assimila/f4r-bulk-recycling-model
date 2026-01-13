@@ -471,6 +471,10 @@ and ensuring that $F^{(x)}$ is expressed in SI units of m^2/s:
 F^{(x)} = \frac{10^2}{\rho_L g} F^{(x)}_D = 1.02 \times 10^{-2} F^{(x)}_D
 ```
 
+### Numerical stability
+
+Please see [numerical_stability.md](./numerical_stability.md) for details on numerical stability.
+
 ## Implementation
 
 This is not a "big data" problem.
