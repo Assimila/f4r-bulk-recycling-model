@@ -80,6 +80,26 @@ class Test_run(TestBase):
         assert status["k"] > 0
         assert len(status["deltas"]) == status["k"]
 
+    def test_clamp_tolerance(self):
+        """
+        can run with clamping
+        """
+        status = run(
+            self.Fx_left,
+            self.Fx_right,
+            self.Fy_bottom,
+            self.Fy_top,
+            self.E,
+            self.P,
+            self.dx,
+            self.dy,
+            clamp_tolerance=0.1,
+            tol=1e-2,
+        )
+        assert status["success"]
+        assert status["k"] > 0
+        assert len(status["deltas"]) == status["k"]
+
     def test_max_iter(self):
         """
         does not converge

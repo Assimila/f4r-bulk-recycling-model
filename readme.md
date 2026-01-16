@@ -54,6 +54,7 @@ Evaporative (local) water vapor flux $\vec{F}_m = (F^{(x)}_m, F^{(y)}_m) = (u w_
 ### Auxiliary variable
 
 Local recycling ratio $\rho$: scalar field defined by equation (2.8) of [[1]](#ref-1).
+Defined on the interval [0, 1].
 
 $$
 \rho(x, y) = \frac{P_m(x, y)}{P(x, y)}
