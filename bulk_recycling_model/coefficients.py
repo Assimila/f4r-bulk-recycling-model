@@ -2,7 +2,7 @@ from functools import cached_property
 
 import numpy as np
 
-from . import cases, utils
+from . import cases, rotate, utils
 
 
 class Coefficients:
@@ -239,9 +239,82 @@ class Coefficients:
         Fx_left = self.Fx_left_adjusted
 
         return Fx_left * self.dy
-    
+
+    @cached_property
+    def instability_heuristic(self) -> np.ndarray:
+        """
+        Numerical instability heuristic.
+
+        A value >> 1 indicates a potential for instability.
+
+        Returns: instability heuristic array on the secondary grid
+        """
+        numerator = np.max(
+            [
+                np.abs(a)
+                for a in (
+                    self.alpha_1,
+                    self.alpha_C,
+                    self.alpha_U,
+                    self.alpha_R,
+                    self.alpha_D,
+                    self.alpha_L,
+                )
+            ],
+            axis=0,
+        )
+        denominator = np.abs(self.A_0)
+        return numerator / denominator
+
+    def rotated_instability_heuristic(self, k: int = 0) -> np.ndarray:
+        """
+        Numerical instability heuristic.
+
+        A value >> 1 indicates a potential for instability.
+
+        Args:
+            k: Number of times to rotate by 90 degrees counter-clockwise. May be negative.
+
+        Returns: instability heuristic array on the secondary grid, in the original orientation
+        """
+        rotated_coeffs = self._rotate(k=k)
+        instability_heuristic_rotated = rotated_coeffs.instability_heuristic
+        # rotate back to original orientation
+        instability_heuristic = rotate.rot90(instability_heuristic_rotated, k=-k)
+        return instability_heuristic
+
+    def _rotate(self, k: int) -> "Coefficients":
+        """
+        Args:
+            k: Number of times to rotate by 90 degrees counter-clockwise. May be negative.
+
+        Returns:
+            Rotated Coefficients object
+        """
+        # rotate by 90 degrees counter-clockwise `rotation` times
+        Fx_left, Fx_right, Fy_bottom, Fy_top = rotate.rot90_flux_lrbt(
+            self.Fx_left, self.Fx_right, self.Fy_bottom, self.Fy_top, k=k
+        )
+        E = rotate.rot90(self.E, k=k)
+        P = rotate.rot90(self.P, k=k)
+        if k % 2 == 1:
+            # swap dx and dy for odd rotations
+            dx, dy = self.dy, self.dx
+        else:
+            dx, dy = self.dx, self.dy
+        return Coefficients(
+            Fx_left=Fx_left,
+            Fx_right=Fx_right,
+            Fy_bottom=Fy_bottom,
+            Fy_top=Fy_top,
+            E=E,
+            P=P,
+            dx=dx,
+            dy=dy,
+        )
+
     # For each coefficient, provide a version with a buffer of NaNs
-    
+
     @cached_property
     def A_0_buffered(self):
         return utils.buffer(self.A_0)
@@ -249,23 +322,23 @@ class Coefficients:
     @cached_property
     def alpha_1_buffered(self):
         return utils.buffer(self.alpha_1)
-    
+
     @cached_property
     def alpha_C_buffered(self):
         return utils.buffer(self.alpha_C)
-    
+
     @cached_property
     def alpha_U_buffered(self):
         return utils.buffer(self.alpha_U)
-    
+
     @cached_property
     def alpha_R_buffered(self):
         return utils.buffer(self.alpha_R)
-    
+
     @cached_property
     def alpha_D_buffered(self):
         return utils.buffer(self.alpha_D)
-    
+
     @cached_property
     def alpha_L_buffered(self):
         return utils.buffer(self.alpha_L)
