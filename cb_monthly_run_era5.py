@@ -35,11 +35,14 @@ shp_cod = gpd.read_file(datas+"congo_basin_evergreen.shp")
 S_NAME = "S_SE" # S_SE or S_LSE 
 L_NAME = "L_M" # L_M or L_HI
 
-years = [1990, 1991, 1992, 1993, 
-         1996, 1997, 1998, 1999, 2000, 2001, 2002, 
-         2003, 2004, 2005, 2006, 2007, 2008, 2009, 
-         2010, 2012, 2013, 2014, 2015,
-         2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]
+#years = [1990, 1991, 1992, 1993, 1994,1995,
+#         1996, 1997, 1998, 1999, 2000, 2001, 2002, 
+#         2003, 2004, 2005, 2006, 
+#years = [2007, 2008, 2009, 
+#         2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019,
+#         2020,2021, 2022, 2023, 2024]
+
+years = [2020]
 
 for YR in years:
         print(YR)
@@ -226,19 +229,40 @@ for YR in years:
                 dy,
                 R=0.2,
                 R_1=0.2,
-                max_iter=500,
+                max_iter=1000,
                 tol=1e-3,
             )
-                
+
             #Print timestep and status (converged or not) and add rho to recycling ration array
-            rot = 2
             print(i,time.values)
-            print('Rotation is: ',rot+1)
-            print(status[rot]['k'])
-            rho_ar[0,:,:,i] = status[0]["rho"]
-            rho_ar[1,:,:,i] = status[1]["rho"]
-            rho_ar[2,:,:,i] = status[2]["rho"]
-            rho_ar[3,:,:,i] = status[3]["rho"]
+            for R in np.arange(0,4):
+                print(R,status[R]['success'])    
+                if status[R]['success']==True:
+                    rho_ar[R,:,:,i] = status[R]["rho"]
+                else:
+                    rho_ar[R,:,:,i] = np.nan
+    
+    #                # plot each timestep 
+    #                fig, ax = plt.subplots()
+    #                cmap=plt.cm.viridis
+    #                cmap.set_extremes(under='red', over='orange')
+    #                collection = plotting.pcolormesh(ax, status[R]["rho"], lon_axis, lat_axis,
+    #                                             vmin=0.0, vmax=1,
+    #                                             cmap=cmap)
+    #                fig.colorbar(collection,extend='both')
+    #                fig.suptitle("Rot: "+str(R)+' - '+str(time.values)+" $\\rho$")
+    #                #plt.savefig(datap+"rho_"+str(time.values)+".png")
+    #                plt.show()
+    #                plt.close()
+    #            
+    #                # plot the convergence
+    #                deltas = status[R]["deltas"]
+    #                fig, ax = plt.subplots()
+    #                ax.plot(deltas)
+    #                ax.set_title("Rot: "+str(R)+" - Convergence")
+    #                ax.set_xlabel("Iteration")
+    #                plt.show()
+    #                plt.close()
         
         # **Create and save rho xarray file**
         # - Create an xarray to store all of the calculated recycling ratios that is organised in an easy to plot/interpret format

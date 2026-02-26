@@ -56,3 +56,27 @@
 - Have run all the bands for rho (still haven't redownloaded the files with issues)
 - Multiplot is taking way too long - may just need to do it manually?
 - Running N band for S_SE and L_HI to test whether there are less parts that don't converge >> finished this and now just need to get multiplot to work..
+
+### 19th Feb 2026
+
+- 1994 and 1995 are sorted
+- 2011, 2016, and 2020 do need to be redownloaded still (tested with merge L_HI)
+
+### 21st Feb 2026
+
+- 2011 done
+- downloading 2016
+
+### 22 Feb 2026
+
+## Running:
+1990-2015 of:
+> Bands - L_M S_SE R=0.2 iter=1000
+
+> DRC - L_M S_SE R=0.2 iter=1000 
+
+> CB - L_M S_SE R=0.2 iter=1000 
+
+### 23 Feb 2026
+
+2016 still has integrated values that are not finite
