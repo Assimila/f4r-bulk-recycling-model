@@ -129,7 +129,6 @@ for YR in years:
         # - Evaporation and moisture fluxes
         # Prepare and scale the data
         from bulk_recycling_model import preprocess
-        from bulk_recycling_model import ED_preprocess
         from bulk_recycling_model.axis import Axis
         from bulk_recycling_model.scaling import Scaling, UnitSystem
         
@@ -204,8 +203,8 @@ for YR in years:
         for i,time in enumerate(ds.time):
              
             # preprocess E onto the secondary grid
-            Ei_total = ED_preprocess.prepare_E(E_total[:,:,i])
-            Ei_local = ED_preprocess.prepare_E(E_local[:,:,i])
+            Ei_total = preprocess.prepare_E(E_total[:,:,i])
+            Ei_local = preprocess.prepare_E(E_local[:,:,i])
             
             # preprocess water vapor fluxes onto the secondary grid
             Fxi_left = preprocess.prepare_Fx_left(Fx[:,:,i])

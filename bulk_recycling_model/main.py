@@ -4,6 +4,7 @@ from typing import Callable, TypedDict
 
 import numpy as np
 
+from .clamping import clamp
 from .coefficients import Coefficients
 from .rotate import rot90, rot90_flux_lrbt
 from .utils import (
@@ -39,7 +40,17 @@ class RunStatus(TypedDict):
     time_taken: timedelta
 
 
-def callback(rho: np.ndarray, k: int) -> None:
+type Callback = Callable[[np.ndarray, int], None]
+"""
+Args:
+    rho: the auxiliary variable rho, with shape (N, M) on the secondary grid.
+        N = number of points in longitude.
+        M = number of points in latitude.
+    k: the iteration number
+"""
+
+
+def noop_callback(rho: np.ndarray, k: int) -> None:
     """
     Noop callback function.
 
@@ -52,6 +63,12 @@ def callback(rho: np.ndarray, k: int) -> None:
     pass
 
 
+# Fail early condition.
+# If the convergence delta exceeds this value,
+# we consider the solution to be diverging (running away).
+DELTA_DIVERGENCE_THRESHOLD = 1e3
+
+
 def run(
     Fx_left: np.ndarray,
     Fx_right: np.ndarray,
@@ -61,12 +78,16 @@ def run(
     P: np.ndarray,
     dx: float,
     dy: float,
+    *,
     rho_0: float = 0.0,
     R: float = 0.2,
     R_1: float = 0.2,
+    clamp_tolerance: float | None = None,
     max_iter: int = 1000,
     tol: float = 1e-3,
-    callback: Callable[[np.ndarray, int], None] = callback,
+    divergence_tolerance: float = DELTA_DIVERGENCE_THRESHOLD,
+    step_callback: Callback | None = None,
+    cell_callback: Callback | None = None,
 ) -> RunStatus:
     """
     Solve for the auxiliary variable rho of the bulk recycling model.
@@ -90,11 +111,19 @@ def run(
         R: relaxation parameter within the model domain
         R_1: relaxation parameter external to the model domain.
             used for extrapolation of outflows.
+        clamp_tolerance: If provided, apply smooth clamping to rho after each iteration.
+            Effectively limiting rho to the range [-clamp_tolerance, 1 + clamp_tolerance].
+            Warning: Clamping effectively prevents runaway solutions 
+            but can mask the numerical instability in the model itself.
+            The may lead to an inaccurate final "converged" equilibrium state.
         max_iter: maximum number of iterations
         tol: tolerance for convergence.
             The algorithm halts when the absolute difference between iterations (including relaxation) is less than tol.
-        callback: A callback function, with arguments (rho, k).
-            May be called multiple times per iteration.
+        divergence_tolerance: tolerance for divergence (fail early).
+        step_callback: A callback function, with arguments (rho, k).
+            Called after each step.
+        cell_callback: A callback function, with arguments (rho, k).
+            Called after each cell update, at least N x M times per step.
 
     Raises:
         ValueError: if any of the inputs are not valid
@@ -144,6 +173,18 @@ def run(
     if tol <= 0:
         raise ValueError("tol must be positive")
 
+    if divergence_tolerance <= 0:
+        raise ValueError("divergence_tolerance must be positive")
+    
+    if step_callback is None:
+        step_callback = noop_callback
+
+    if cell_callback is None:
+        cell_callback = noop_callback
+
+    if clamp_tolerance is not None and clamp_tolerance <= 0:
+        raise ValueError("clamp_tolerance must be positive")
+
     # ------------------------------------------------------------------------------------------------------------------
     # Prepare for iteration
     # ------------------------------------------------------------------------------------------------------------------
@@ -172,9 +213,14 @@ def run(
     iter_start = datetime.now(UTC)
     time_taken = timedelta(0)
 
+    success = False
+
     # ------------------------------------------------------------------------------------------------------------------
     # Iterate
     # ------------------------------------------------------------------------------------------------------------------
+
+    step_callback(rho, k)
+    cell_callback(rho, k)
 
     for k in range(1, max_iter + 1):
         # --------------------------------------------------------------------------------------------------------------
@@ -208,7 +254,7 @@ def run(
 
             logger.debug(f"Iteration {k} of {max_iter}, diagonal {diag}")
 
-            # skip the first and last cell of the diagonal - 
+            # skip the first and last cell of the diagonal -
             # these are in the buffer, outside the model domain, and updated later.
             for i, j in drop_first(drop_last(diagonal(N_buffered, M_buffered, diag))):
                 # ------------------------------------------------------------------------------------------------------
@@ -231,7 +277,7 @@ def run(
                 # apply the relaxation parameter
                 rho_next[i, j] = rho[i, j] + R * (A_1 / A_0 - rho[i, j])
 
-            callback(rho_next, k)
+                cell_callback(rho_next, k)
 
         # --------------------------------------------------------------------------------------------------------------
         # Solve for external outflow cells by extrapolation
@@ -247,6 +293,8 @@ def run(
                 # apply the relaxation parameter
                 rho_next[i, j] = rho[i, j] + R_1 * (rho_extr - rho[i, j])
 
+                cell_callback(rho_next, k)
+
         # right
         i = -1
         for j in range(M_buffered):
@@ -254,6 +302,8 @@ def run(
                 rho_extr = 2 * rho_next[i - 1, j] - rho_next[i - 2, j]
                 # apply the relaxation parameter
                 rho_next[i, j] = rho[i, j] + R_1 * (rho_extr - rho[i, j])
+
+                cell_callback(rho_next, k)
 
         # bottom
         j = 0
@@ -263,6 +313,8 @@ def run(
                 # apply the relaxation parameter
                 rho_next[i, j] = rho[i, j] + R_1 * (rho_extr - rho[i, j])
 
+                cell_callback(rho_next, k)
+
         # top
         j = -1
         for i in range(N_buffered):
@@ -271,11 +323,25 @@ def run(
                 # apply the relaxation parameter
                 rho_next[i, j] = rho[i, j] + R_1 * (rho_extr - rho[i, j])
 
-        callback(rho_next, k)
+                cell_callback(rho_next, k)
+
+        # --------------------------------------------------------------------------------------------------------------
+        # Apply clamping if requested
+        # --------------------------------------------------------------------------------------------------------------
+
+        if clamp_tolerance is not None:
+            logger.debug(f"Iteration {k} of {max_iter}. Applying clamping with tolerance {clamp_tolerance}")
+            rho_next = clamp(
+                rho_next,
+                tolerance=clamp_tolerance,
+            )
+            cell_callback(rho_next, k)
 
         # --------------------------------------------------------------------------------------------------------------
         # Finished step
         # --------------------------------------------------------------------------------------------------------------
+
+        step_callback(rho_next, k)
 
         #logger.info(
         #    f"Iteration {k} of {max_iter}. Finished in {(datetime.now(UTC) - step_start).total_seconds()} seconds"
@@ -285,34 +351,123 @@ def run(
         deltas.append(delta)
         #logger.info(f"Iteration {k} of {max_iter}. delta = {delta}")
 
-        if delta < tol:
-            time_taken = datetime.now(UTC) - iter_start
-            logger.info(f"Converged in {k} iterations and {time_taken}")
-            return RunStatus(
-                success=True,
-                rho=unbuffer(rho_next),
-                k=k,
-                deltas=deltas,
-                time_taken=time_taken,
-            )
-
         # update rho for next iteration
         rho = rho_next
 
+        if delta < tol:
+            logger.info(f"Converged in {k} iterations")
+            success = True
+            break
+        elif delta > divergence_tolerance:
+            logger.warning(f"Diverged in {k} iterations")
+            break
+        elif not np.isfinite(delta):
+            logger.warning(f"Diverged (non-finite delta) in {k} iterations")
+            break
+
+    else:
+        #logger.warning(f"Did not converge in {max_iter} iterations")
+        pass
+        
+
     # ------------------------------------------------------------------------------------------------------------------
-    # hit max_iter without converging
+    # Finished iteration
     # ------------------------------------------------------------------------------------------------------------------
 
-    logger.warning(f"Did not converge in {max_iter} iterations")
+    time_taken = datetime.now(UTC) - iter_start
+    #logger.info(f"Total time: {time_taken}")
 
     return RunStatus(
-        success=False,
+        success=success,
         rho=unbuffer(rho),
         k=k,
         deltas=deltas,
         time_taken=time_taken,
     )
 
+
+def run_rotated(
+    Fx_left: np.ndarray,
+    Fx_right: np.ndarray,
+    Fy_bottom: np.ndarray,
+    Fy_top: np.ndarray,
+    E: np.ndarray,
+    P: np.ndarray,
+    dx: float,
+    dy: float,
+    *,
+    rho_0: float = 0.0,
+    R: float = 0.2,
+    R_1: float = 0.2,
+    clamp_tolerance: float | None = None,
+    max_iter: int = 1000,
+    tol: float = 1e-3,
+    divergence_tolerance: float = DELTA_DIVERGENCE_THRESHOLD,
+    step_callback: Callback | None = None,
+    cell_callback: Callback | None = None,
+    rotation: int = 0,
+) -> RunStatus:
+    """
+    Run the solver on a rotated grid.
+    Ensures that callbacks receive rho in the original orientation.
+    And returns the result in the original orientation.
+
+    Args:
+        rotation: number of 90 degree counter-clockwise rotations to apply to the grid
+    """
+    if rotation not in (0, 1, 2, 3):
+        raise ValueError("Invalid rotation")
+    
+    # rotate by 90 degrees counter-clockwise `rotation` times
+    Fx_left, Fx_right, Fy_bottom, Fy_top = rot90_flux_lrbt(Fx_left, Fx_right, Fy_bottom, Fy_top, k=rotation)
+    E = rot90(E, k=rotation)
+    P = rot90(P, k=rotation)
+    if rotation % 2 == 1:
+        # swap dx and dy for odd rotations
+        dx, dy = dy, dx
+
+    def prepare_callback(callback: Callback | None) -> Callback | None:
+        """
+        Wrapper for the callbacks.
+        Rotates rho back to the original orientation.
+        """
+        if callback is None:
+            return None
+        else:
+            def rotated_callback(rho: np.ndarray, k: int) -> None:
+                """
+                This is the function that is passed to the solver.
+                """
+                nonlocal rotation
+                rho_original_orientation = rot90(rho, k=-rotation)
+                callback(rho_original_orientation, k)
+
+            return rotated_callback
+
+    status = run(
+        Fx_left,
+        Fx_right,
+        Fy_bottom,
+        Fy_top,
+        E,
+        P,
+        dx,
+        dy,
+        rho_0=rho_0,
+        R=R,
+        R_1=R_1,
+        clamp_tolerance=clamp_tolerance,
+        max_iter=max_iter,
+        tol=tol,
+        divergence_tolerance=divergence_tolerance,
+        step_callback=prepare_callback(step_callback),
+        cell_callback=prepare_callback(cell_callback),
+    )
+
+    # rotate the result (scalar field rho) back to original orientation
+    status["rho"] = rot90(status["rho"], k=-rotation)
+
+    return status
 
 
 def run_4_orientations(
@@ -324,12 +479,16 @@ def run_4_orientations(
     P: np.ndarray,
     dx: float,
     dy: float,
+    *,
     rho_0: float = 0.0,
     R: float = 0.2,
     R_1: float = 0.2,
+    clamp_tolerance: float | None = None,
     max_iter: int = 1000,
     tol: float = 1e-3,
-    callback: Callable[[np.ndarray, int], None] = callback,
+    divergence_tolerance: float = DELTA_DIVERGENCE_THRESHOLD,
+    step_callback: Callback | None = None,
+    cell_callback: Callback | None = None,
 ) -> dict[int, RunStatus]:
     """
     Run the solver 4 times, rotating the grid by 90 degrees counter-clockwise each time.
@@ -339,50 +498,32 @@ def run_4_orientations(
         The returned data is always in the original orientation.
     """
     # mapping from k to RunStatus
-    run_status: dict[int, RunStatus] = {}  
+    run_status: dict[int, RunStatus] = {}
 
-    for k in range(4):
-        logger.info(f"Attempt {k + 1} of 4 with rotation of {k * 90} degrees")
+    for rotation in range(4):
+        logger.info(f"Attempt {rotation + 1} of 4 with rotation of {rotation * 90} degrees")
 
-        # rotate by 90 degrees counter-clockwise k times
-        Fx_left_k, Fx_right_k, Fy_bottom_k, Fy_top_k = rot90_flux_lrbt(
-            Fx_left, Fx_right, Fy_bottom, Fy_top, k=k
-        )
-        E_k = rot90(E, k=k)
-        P_k = rot90(P, k=k)
-        if k % 2 == 1:
-            # swap dx and dy for odd k
-            dx_k = dy
-            dy_k = dx
-        else:
-            dx_k = dx
-            dy_k = dy
-
-        status = run(
-            Fx_left_k,
-            Fx_right_k,
-            Fy_bottom_k,
-            Fy_top_k,
-            E_k,
-            P_k,
-            dx_k,
-            dy_k,
-            rho_0,
-            R,
-            R_1,
-            max_iter,
-            tol,
-            callback,
+        status = run_rotated(
+            Fx_left,
+            Fx_right,
+            Fy_bottom,
+            Fy_top,
+            E,
+            P,
+            dx,
+            dy,
+            rho_0=rho_0,
+            R=R,
+            R_1=R_1,
+            clamp_tolerance=clamp_tolerance,
+            max_iter=max_iter,
+            tol=tol,
+            divergence_tolerance=divergence_tolerance,
+            step_callback=step_callback,
+            cell_callback=cell_callback,
+            rotation=rotation,
         )
 
-        #logger.info(
-        #    f"Attempt finished with success={status['success']} after {status['k']} iterations. "
-        #    f"Final delta={status['deltas'][-1]}."
-        #)
-
-        # rotate the result (scalar field rho) back to original orientation
-        status["rho"] = rot90(status["rho"], k=-k)
-
-        run_status[k] = status
+        run_status[rotation] = status
 
     return run_status

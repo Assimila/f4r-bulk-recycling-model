@@ -26,17 +26,12 @@ start_all = timer.time()
 # - L_M (pressure level vars resampled to monthly timestep)
 # - L_HI (pressure level vars with integrated moist flux calcualted hourly and then resampled to monthly timestep)
 
-## 1994, 1995, 2010, 2016 are being skipped until they can be downloaded properly
 
-#years = [1990, 1991, 1992, 1993, 1994,1995,
-#         1996, 1997, 1998, 1999, 2000, 2001, 2002, 
-#         2003, 2004, 2005, 2006, 2007, 2008, 2009, 
-#         2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019,
-#         2020,2021, 2022, 2023, 2024]
-
-years = [1990]
-
-         
+years = [1990, 1991, 1992, 1993, 1994,1995,
+         1996, 1997, 1998, 1999, 2000, 2001, 2002, 
+         2003, 2004, 2005, 2006, 2007, 2008, 2009, 
+         2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019,
+         2020,2021, 2022, 2023, 2024]
 
 band = {'N':[5,12,10,31],'EQ':[-5,5,8,29],'S':[-15,-5,12,31]}
 
@@ -52,7 +47,7 @@ for B in band:
         shp_cod = gpd.read_file(datas+"congo_basin_evergreen.shp")
         
         S_NAME = "S_SE" # S_SE or S_LSE 
-        L_NAME = "L_M" # L_M or L_HI
+        L_NAME = "L_HI" # L_M or L_HI
         
         # ### Band definitions used
         # - North: 5-12**N** / 10-31**E**
@@ -100,7 +95,6 @@ for B in band:
         
         # Prepare and scale the data
         from bulk_recycling_model import preprocess
-        from bulk_recycling_model import ED_preprocess
         from bulk_recycling_model.axis import Axis
         from bulk_recycling_model.scaling import Scaling, UnitSystem
         
@@ -175,8 +169,8 @@ for B in band:
         for i,time in enumerate(ds.time):
              
             # preprocess E onto the secondary grid
-            Ei_total = ED_preprocess.prepare_E(E_total[:,:,i])
-            Ei_local = ED_preprocess.prepare_E(E_local[:,:,i])
+            Ei_total = preprocess.prepare_E(E_total[:,:,i])
+            Ei_local = preprocess.prepare_E(E_local[:,:,i])
             
             # preprocess water vapor fluxes onto the secondary grid
             Fxi_left = preprocess.prepare_Fx_left(Fx[:,:,i])

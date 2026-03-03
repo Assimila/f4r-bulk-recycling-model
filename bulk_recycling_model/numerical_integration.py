@@ -168,14 +168,12 @@ def integrate_no_extrapolation(
     if surface_pressure_dims != broadcast_dims:
         raise ValueError(f"surface_pressure has dimensions {surface_pressure_dims}, expected {broadcast_dims}")
 
-    #ED added dask allowed
     da = xr.apply_ufunc(
         np_trapz_no_extrapolation,
         gridded_data,
         surface_pressure,
         input_core_dims=[[pressure_levels_dim], []],
         vectorize=True,
-        #dask="allowed",
         kwargs={
             # pass the gridded pressure levels directly to the function as kwargs
             "pressure_levels": gridded_data.coords[pressure_levels_dim].values,
@@ -225,14 +223,12 @@ def integrate_with_extrapolation(
     if surface_pressure_dims != broadcast_dims:
         raise ValueError(f"surface_pressure has dimensions {surface_pressure_dims}, expected {broadcast_dims}")
 
-    #ED added dask allowed
     da = xr.apply_ufunc(
         np_trapz_with_extrapolation,
         gridded_data,
         surface_pressure,
         input_core_dims=[[pressure_levels_dim], []],
         vectorize=True,
-        #dask="allowed",
         kwargs={
             # pass the gridded pressure levels directly to the function as kwargs
             "pressure_levels": gridded_data.coords[pressure_levels_dim].values,
@@ -241,7 +237,6 @@ def integrate_with_extrapolation(
 
     if check_finite:
         if not xr.ufuncs.isfinite(da).all():
-            #print("INTEGRATION NOT FINITE")
             raise ValueError("Integration result is not finite")
         
     return da
@@ -288,7 +283,6 @@ def integrate_with_surface_value(
     if surface_value_dims != broadcast_dims:
         raise ValueError(f"surface_value has dimensions {surface_value_dims}, expected {broadcast_dims}")
 
-    #ED added dask allowed
     da = xr.apply_ufunc(
         np_trapz_with_surface_value,
         gridded_data,
@@ -296,7 +290,6 @@ def integrate_with_surface_value(
         surface_value,
         input_core_dims=[[pressure_levels_dim], [], []],
         vectorize=True,
-        #dask="allowed",
         kwargs={
             # pass the gridded pressure levels directly to the function as kwargs
             "pressure_levels": gridded_data.coords[pressure_levels_dim].values,
