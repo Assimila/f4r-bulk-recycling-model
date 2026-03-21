@@ -80,3 +80,16 @@
 ### 23 Feb 2026
 
 2016 still has integrated values that are not finite
+
+### 21 March 2026 (with Wilfried)
+
+testing for EQ band
+
+1990 bands
+- 04, 09
+
+1990 lowres
+- 08, 09
+
+1990 git lowres
+- 02, 04, 07, 08, 09
