@@ -302,6 +302,8 @@ P = preprocess.calculate_precipitation(..., E, ...)
 This is not a physically rigorous approach.
 But may be acceptable if the nudge is local and evaporation is conserved.
 
+See `notebooks/nudge_hot_pixel.ipynb` for an example.
+
 ## Other Interventions
 
 The following interventions have been considered but not found to be effective.
