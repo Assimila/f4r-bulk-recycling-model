@@ -33,6 +33,7 @@ years = [1990, 1991, 1992, 1993, 1994,1995,
          2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019,
          2020,2021, 2022, 2023, 2024]
 
+#band = {'EQ':[-5,5,12,31],'S':[-15,-5,14,31],'N':[5,12,10,31]}
 band = {'N':[5,12,10,31],'EQ':[-5,5,8,29],'S':[-15,-5,12,31]}
 
 for B in band:
@@ -47,7 +48,7 @@ for B in band:
         shp_cod = gpd.read_file(datas+"congo_basin_evergreen.shp")
         
         S_NAME = "S_SE" # S_SE or S_LSE 
-        L_NAME = "L_HI" # L_M or L_HI
+        L_NAME = "L_M" # L_M or L_HI
         
         # ### Band definitions used
         # - North: 5-12**N** / 10-31**E**
@@ -193,8 +194,8 @@ for B in band:
                 dy,
                 R=0.2,
                 R_1=0.2,
-                max_iter=1000,
-                tol=1e-3,
+                max_iter=500,
+                tol=1e-2,
             )
                 
             #Print timestep and status (converged or not) and add rho to recycling ration array
