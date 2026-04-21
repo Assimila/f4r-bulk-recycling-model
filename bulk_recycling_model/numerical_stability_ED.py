@@ -8,6 +8,7 @@ def identify_hot_pixel(k,instability_heuristic: np.ndarray) -> tuple[int, int]:
     Returns: tuple of indices (longitude, latitude).
     """
     hot_ind = np.c_[np.unravel_index(np.argpartition(instability_heuristic.ravel(),-k)[-k:],instability_heuristic.shape)]
+
     return hot_ind
 
 def identify_hot_pixel_thresh(thresh,instability_heuristic: np.ndarray) -> tuple[int, int]:

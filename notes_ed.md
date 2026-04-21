@@ -93,3 +93,13 @@ testing for EQ band
 
 1990 git lowres
 - 02, 04, 07, 08, 09
+
+### 14 April 2026
+
+- have tried to nudge particularly hot points 
+
+### 21st April 2026
+
+- now trying to nudge evap by 1 rather than 5 (nudged runs without the nudge amount in the folder name are all nudged by 5)
+
+

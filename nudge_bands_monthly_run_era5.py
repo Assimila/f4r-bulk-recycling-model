@@ -18,13 +18,15 @@ import time as timer
 start_all = timer.time()
 
 dataf ="/Volumes/ESA_F4R/ed_prepare/2026_mergeds/" 
-datao ="/Volumes/ESA_F4R/ed_prepare/2026_rho/bands_rho/" 
-datap ="/Volumes/ESA_F4R/ed_prepare/2026_plots/bands_rho/" 
+datao ="/Volumes/ESA_F4R/ed_prepare/2026_rho/nudged_1_mint_r02_tol1e3_max1000/" 
 datas ="/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/3_ESA_GRANT/MODEL/Shapefiles/"
 shp_cod = gpd.read_file(datas+"congo_basin_evergreen.shp")
 
 S_NAME = "S_SE" # S_SE or S_LSE 
 L_NAME = "L_M" # L_M or L_HI
+
+max_iter = 1000
+tol = 1e-3
 
 # ### Band definitions used
 # - North: 5-12**N** / 10-31**E**
@@ -228,8 +230,8 @@ for B in band:
                 dy,
                 R=0.2,
                 R_1=0.2,
-                max_iter=500,
-                tol=1e-2,
+                max_iter=max_iter,
+                tol=tol,
             )
             #Print timestep and status (converged or not) and add rho to recycling ration array
             print(i,time.values)
@@ -253,7 +255,7 @@ for B in band:
                     #k = 3
                     thresh=1.75
                     #tune these nudging values as needed
-                    offset = 5.0
+                    offset = 1.0
                     kernel_size = 3
                     #hot_ind = identify_hot_pixel(k,coeffs.rotated_instability_heuristic(k=ROT))
                     hot_ind = identify_hot_pixel_thresh(thresh,coeffs.rotated_instability_heuristic(k=ROT))
@@ -283,8 +285,8 @@ for B in band:
                             dy,
                             R=0.2,
                             R_1=0.2,
-                            max_iter=500,
-                            tol=1e-2,
+                            max_iter=max_iter,
+                            tol=tol,
                             rotation=ROT,
                         )
                         #Print timestep and status (converged or not) and add rho to recycling ration array
