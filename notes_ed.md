@@ -102,4 +102,10 @@ testing for EQ band
 
 - now trying to nudge evap by 1 rather than 5 (nudged runs without the nudge amount in the folder name are all nudged by 5)
 
+### 24th April 2026
+
+> Workshop
+
+- check with COMIFAC if they have a regional meeting in the coming weeks so that a wider group can be targeted 
+- COMIFAC originally wanted to include all the countries in the region
 

@@ -127,6 +127,10 @@ def prepare_Fx_left(Fx: np.ndarray) -> np.ndarray:
         )
         / 2
     )
+    #fx1 = Fx[:-1, :-1]
+    #fx2 = Fx[:-1, 1:] 
+    #print('1',fx1[-5:,-5:])
+    #print('2',fx2[-5:,-5:])
 
     return Fx_left
 
