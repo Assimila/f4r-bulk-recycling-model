@@ -42,6 +42,41 @@ def pcolormesh(ax: Axes, data: np.ndarray, lon: Axis, lat: Axis, **kwargs) -> Qu
 
     return ax.pcolormesh(X, Y, data, shading="nearest", **kwargs)
 
+def contour(ax: Axes, data: np.ndarray, lon: Axis, lat: Axis, **kwargs) -> QuadMesh:
+    """
+    Create a pcolormesh plot of the given data on the specified axes.
+
+    Args:
+        data: 2D array of data to plot of the shape (N, M).
+            N = number of points in longitude.
+            M = number of points in latitude.
+            May be on the primary grid, secondary grid, or buffered secondary grid.
+        lon: Axis object for the x-axis (longitude).
+        lat: Axis object for the y-axis (latitude).
+        **kwargs: Additional keyword arguments to pass to pcolormesh.
+    """
+    # figure out if we're on the primary, secondary, or buffered secondary grid
+    N, M = data.shape
+    if N == lon.n_points and M == lat.n_points:
+        # primary grid
+        x = lon.primary
+        y = lat.primary
+    elif N == lon.n_points - 1 and M == lat.n_points - 1:
+        # secondary grid
+        x = lon.secondary
+        y = lat.secondary
+    elif N == lon.n_points + 1 and M == lat.n_points + 1:
+        # buffered secondary grid
+        x = lon.secondary_buffered
+        y = lat.secondary_buffered
+    else:
+        err = f"Array shape {data.shape} does not match axes {lon=} {lat=}"
+        raise ValueError(err)
+
+    # use indexing="ij" to account for the [lon, lat] indexing
+    X, Y = np.meshgrid(x, y, indexing="ij")
+
+    return ax.contour(X, Y, data, shading="nearest", **kwargs)
 
 def build_uv_fluxes(
     Fx_left: np.ndarray, Fx_right: np.ndarray, Fy_bottom: np.ndarray, Fy_top: np.ndarray

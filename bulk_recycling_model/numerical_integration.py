@@ -235,8 +235,6 @@ def integrate_with_extrapolation(
         },
     )
 
-    print(da)
-
     if check_finite:
         if not xr.ufuncs.isfinite(da).all():
             raise ValueError("Integration result is not finite")
