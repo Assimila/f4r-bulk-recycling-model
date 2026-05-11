@@ -99,7 +99,7 @@ for B in band:
         
         #Clip out specific band
         ds = ds.transpose("time","level","lat","lon",missing_dims='ignore')
-        ds = ds.sel(lon=slice(band[B][2],band[B][3]),lat=slice(band[B][0],band[B][1]))
+        ds = ds.sel(lon=slice(band[B][2],band[B][3]),lat=slice(band[B][0],band[B][1]),drop=True)
         
         ds = ds.transpose("lon","lat","level","time",missing_dims='ignore')
         
@@ -193,7 +193,7 @@ for B in band:
         from bulk_recycling_model import plotting
         from bulk_recycling_model.main import run_4_orientations, run_rotated
         from bulk_recycling_model import coefficients
-        
+
         #Make the rho array the same shape as the total E - will clip the external points at the end
         rho_ar = np.empty((4,np.shape(E_total)[0]-1,np.shape(E_total)[1]-1,np.shape(E_total)[2]))
         #Entering preprocessing and time step loop
@@ -202,6 +202,7 @@ for B in band:
         count_success_post_nudge = 0
         count_fail_pre_nudge = 0
         count_fail_post_nudge = 0
+        too_many_pixels = 0
         no_hot_pixel = 0
         for i,time in enumerate(ds.time):
              
@@ -209,15 +210,21 @@ for B in band:
             Ei_total = preprocess.prepare_E(E_total[:,:,i])
             Ei_local = preprocess.prepare_E(E_local[:,:,i])
             
+            #print('post-processed land min',Ei_local.min())
+            #print('post-processed total min',Ei_total.min())
+            
             # preprocess water vapor fluxes onto the secondary grid
             Fxi_left = preprocess.prepare_Fx_left(Fx[:,:,i])
+            #print("***Fxi_left**")
+            
+            
             Fxi_right = preprocess.prepare_Fx_right(Fx[:,:,i])
             Fyi_bottom = preprocess.prepare_Fy_bottom(Fy[:,:,i])
             Fyi_top = preprocess.prepare_Fy_top(Fy[:,:,i])
             
             # compute P
             Pi = preprocess.calculate_precipitation(Fxi_left, Fxi_right, Fyi_bottom, Fyi_top, Ei_total, dx, dy)
-            
+        
             # Run the model
             status = run_4_orientations(
                 Fxi_left,
@@ -236,7 +243,7 @@ for B in band:
             #Print timestep and status (converged or not) and add rho to recycling ration array
             print(i,time.values)
             for ROT in np.arange(0,4):
-                print(ROT,status[ROT]['success'],'**pre-nudge')
+                print(ROT,status[ROT]['success'],'**pre-nudge')    
                 if status[ROT]['success']==True:
                     rho_ar[ROT,:,:,i] = status[ROT]["rho"]
                     count_success_pre_nudge = count_success_pre_nudge + 1
@@ -252,26 +259,47 @@ for B in band:
                     #identify hot pixel
                     from bulk_recycling_model.numerical_stability_ED import identify_hot_pixel, identify_hot_pixel_thresh, nudge_hot_pixel
                     #printing example of the hottest pixels
-                    #k = 3
+                    p = 4
+                    s_p = 1
                     thresh=1.75
+                    s_thresh = 1.2
                     #tune these nudging values as needed
-                    offset = 1.0
-                    kernel_size = 3
-                    #hot_ind = identify_hot_pixel(k,coeffs.rotated_instability_heuristic(k=ROT))
+                    offset = 2.0
+                    kernel_size = 15
+                    #hot_ind = identify_hot_pixel(p,coeffs.rotated_instability_heuristic(k=ROT))
                     hot_ind = identify_hot_pixel_thresh(thresh,coeffs.rotated_instability_heuristic(k=ROT))
-                    #i_hot, j_hot = identify_hot_pixel(k,coeffs.rotated_instability_heuristic(k=ROT))[len(hot_ind)-1]
-                    if len(hot_ind)>0:
-                        print('*There are ',len(hot_ind),' hot pixels*')
-                        i_hot, j_hot = identify_hot_pixel_thresh(thresh,coeffs.rotated_instability_heuristic(k=ROT))[len(hot_ind)-1]
-            
+                    if len(hot_ind)>p:
+                        hot_ind=hot_ind
+                    if len(hot_ind)==0:
+                        hot_ind = identify_hot_pixel_thresh(s_thresh,coeffs.rotated_instability_heuristic(k=ROT)) 
+                        if len(hot_ind)>0:
+                            hot_ind = identify_hot_pixel(s_p,coeffs.rotated_instability_heuristic(k=ROT)) 
+                    print('*There are ',len(hot_ind),' hot pixels*')
+                    if len(hot_ind)>0 and len(hot_ind)<=p:
+                        i_hot, j_hot = np.unravel_index(np.argmax(instability_heuristic, axis=None), instability_heuristic.shape)
+                        print(
+                            f"Hottest pixel identified at (i={i_hot}, j={j_hot}) "
+                            f"with instability heuristic = {coeffs.rotated_instability_heuristic(k=ROT)[i_hot, j_hot]}"
+                        )
+                        print("E =", Ei_local[i_hot, j_hot])
+                        print("P =", Pi[i_hot, j_hot])
+                        
                         #nudge hot pixel
+                        #print('post-processed land min',Ei_local.min())
+                        #print('post-processed total min',Ei_total.min())
                         E_local_nudged = nudge_hot_pixel(Ei_local, hot_ind, offset=offset, kernel_size=kernel_size)
                         E_total_nudged = nudge_hot_pixel(Ei_total, hot_ind, offset=offset, kernel_size=kernel_size)
                         P_nudged = preprocess.calculate_precipitation(Fxi_left, Fxi_right, Fyi_bottom, Fyi_top, E_total_nudged, dx, dy)
                         coeffs_nudged = coefficients.Coefficients(Fxi_left, Fxi_right, Fyi_bottom, Fyi_top, E_local_nudged, P_nudged, dx, dy)
                         
-                        
                         #----Post-nudge------------------------
+                        
+                        print(
+                            f"Hottest pixel post-nudge at (i={i_hot}, j={j_hot}) "
+                            f"with instability heuristic = {coeffs_nudged.rotated_instability_heuristic(k=ROT)[i_hot, j_hot]}"
+                            )
+                        print("E =", E_local_nudged[i_hot, j_hot])
+                        print("P =", P_nudged[i_hot, j_hot])
             
                         # Run the model again
                         status_or = run_rotated(
@@ -290,7 +318,8 @@ for B in band:
                             rotation=ROT,
                         )
                         #Print timestep and status (converged or not) and add rho to recycling ration array
-                        print(ROT,status_or['success'],'**post-nudge')  
+                        print(i,time.values)
+                        print(ROT,status_or['success'],'**post-nudge')    
                         if status_or['success']==True:
                             rho_ar[ROT,:,:,i] = status_or["rho"]
                             count_success_post_nudge = count_success_post_nudge + 1
@@ -322,15 +351,20 @@ for B in band:
                                 rho_xarr = rho_xarr.where(mask_surf!=0.0,0,np.nan)
                     
                     else:
-                        print('No hot pixels above threshold')
-                        no_hot_pixel = no_hot_pixel + 1 
-        print(B, ' ***********Year***: ',YR)                    
+                        print('No hot pixels above threshold or there are too many hot pixels')
+                        if len(hot_ind)==0: 
+                          no_hot_pixel = no_hot_pixel + 1 
+                        if len(hot_ind)>p:
+                          too_many_pixels = too_many_pixels + 1  
+                            
+        print(B, ' ***********Year***: ',YR)  
         print('count_success_pre_nudge: ', count_success_pre_nudge)
         print('count_fail_pre_nudge: ', count_fail_pre_nudge)
         print('count_success_post_nudge: ', count_success_post_nudge)
         print('count_fail_post_nudge: ', count_fail_post_nudge)
         print('count_fail_no_hot_pixel: ', no_hot_pixel)
-                            
+        print('count_fail_too_many_pixels: ', too_many_pixels)
+        
         # **Create and save rho xarray file**
         # 
         # - Create an xarray to store all of the calculated recycling ratios that is organised in an easy to plot/interpret format
