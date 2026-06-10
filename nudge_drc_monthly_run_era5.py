@@ -101,7 +101,6 @@ for YR in years:
     
     #Points that are 0.0 are inside the region, points on the boundary will be
     ds = ds.transpose("lon","lat","level","time",missing_dims='ignore')
-    ds = ds.sel(lon=slice(7,31),lat=slice(-8,8))
     
     if L_NAME=='L_HI':
         Fx = ds['Fx']

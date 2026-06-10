@@ -17,8 +17,9 @@ import matplotlib.pyplot as plt
 import time as timer
 start_all = timer.time()
 
-dataf ="/Volumes/ESA_F4R/ed_prepare/2026_mergeds/" 
-datao ="/Volumes/ESA_F4R/ed_prepare/2026_rho/nudged_1_mint_r02_tol1e3_max1000/" 
+dataf ="/Volumes/blue_wd/ESA_F4R/2026_mergeds/" 
+datao ="/Volumes/blue_wd/ESA_F4R/2026_rho/bands/" 
+datap ="/Volumes/blue_wd/ESA_F4R/2026_plots/bands/" 
 datas ="/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/3_ESA_GRANT/MODEL/Shapefiles/"
 shp_cod = gpd.read_file(datas+"congo_basin_evergreen.shp")
 
