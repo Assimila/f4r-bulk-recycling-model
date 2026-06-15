@@ -56,3 +56,63 @@ Results:
 - count_fail_post_nudge:  139
 - count_fail_no_hot_pixel:  14
 - count_fail_too_many_pixels:  40
+
+### Band runs on 15th June 2026
+
+Run settings:
+- S_SE (all ERA5 and no ERA5Land)
+- L_HI (vertical flux integrated hourly)
+- linear regridding to 0.5 degrees
+- maximum number of iterations: 1000
+- convergence threshold: 1e-3
+
+Nudge settings:
+- threshold for instability heuristic: 1.75
+- maximum number of unstable points per month: 4
+- offset for evaporation at unstable point: 2
+- kernel size to distribute balanced adjustment in evaporation: 15
+
+> Equatorial Band convergence results
+
+count_success_pre_nudge:  1634 \
+count_fail_pre_nudge:  46 \
+count_success_post_nudge:  25 \
+count_fail_post_nudge:  19 \
+count_fail_no_hot_pixel:  0 \
+count_fail_too_many_pixels:  2 
+
+> Southern Band convergence results
+
+count_success_pre_nudge:  1562 \
+count_fail_pre_nudge:  118 \
+count_success_post_nudge:  52 \
+count_fail_post_nudge:  41 \
+count_fail_no_hot_pixel:  16 \
+count_fail_too_many_pixels:  9
+
+> Northern Band convergence results
+
+count_success_pre_nudge:  1566 \
+count_fail_pre_nudge:  114 \
+count_success_post_nudge:  43 \
+count_fail_post_nudge:  52 \
+count_fail_no_hot_pixel:  13 \
+count_fail_too_many_pixels:  6 
+
+> Congo Basin convergence results:
+
+count_success_pre_nudge:  1608 \
+count_fail_pre_nudge:  72 \
+count_success_post_nudge:  27 \
+count_fail_post_nudge:  42 \
+count_fail_no_hot_pixel:  1 \
+count_fail_too_many_pixels:  2
+
+> DRC convergence results:
+
+count_success_pre_nudge:  1606 \
+count_fail_pre_nudge:  74 \
+count_success_post_nudge:  36 \
+count_fail_post_nudge:  30 \
+count_fail_no_hot_pixel:  2 \
+count_fail_too_many_pixels:  6
